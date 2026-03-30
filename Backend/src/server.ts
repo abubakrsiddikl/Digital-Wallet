@@ -7,9 +7,6 @@ let server: Server;
 
 const startServer = async () => {
   try {
-    // db connection
-    console.log("db connect ok.");
-
     server = app.listen(envVars.PORT, () => {
       console.log("Server is running on port " + envVars.PORT);
     });
@@ -22,7 +19,7 @@ const startServer = async () => {
 startServer();
 
 process.on("SIGTERM", () => {
-  console.log("SIGTERM signal recieved... Server shutting down..");
+  console.log("SIGTERM signal received... Server shutting down..");
 
   if (server) {
     server.close(() => {

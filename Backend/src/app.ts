@@ -7,6 +7,7 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
 import { router } from "./app/routes";
 
+
 const app: Application = express();
 
 (app.use(
