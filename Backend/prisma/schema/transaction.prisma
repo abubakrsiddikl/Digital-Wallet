@@ -1,0 +1,35 @@
+// transaction.prisma
+
+enum TransactionType {
+  SEND_MONEY
+  CASH_IN
+  CASH_OUT
+  PAYMENT
+  ADD_MONEY
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  senderId        String
+  receiverId      String
+  amount          Decimal
+  fee             Decimal           @default(0)
+  agentCommission Decimal           @default(0)
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  initiatedBy     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  sender    User @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver  User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  initiator User @relation("InitiatedTransactions", fields: [initiatedBy], references: [id])
+}
