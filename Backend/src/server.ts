@@ -2,11 +2,13 @@ import type { Server } from "http";
 
 import { envVars } from "./app/config/env";
 import app from "./app";
+import { seedSystemWallet } from "./app/utils/seedSystemWallet";
 
 let server: Server;
 
 const startServer = async () => {
   try {
+    await seedSystemWallet();
     server = app.listen(envVars.PORT, () => {
       console.log("Server is running on port " + envVars.PORT);
     });

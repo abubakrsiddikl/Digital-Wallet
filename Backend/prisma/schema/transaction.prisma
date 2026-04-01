@@ -16,17 +16,19 @@ enum TransactionStatus {
 }
 
 model Transaction {
-  id              String            @id @default(uuid())
-  senderId        String
-  receiverId      String
-  amount          Decimal
-  fee             Decimal           @default(0)
-  agentCommission Decimal           @default(0)
-  type            TransactionType
-  status          TransactionStatus @default(PENDING)
-  initiatedBy     String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id               String            @id @default(uuid())
+  senderId         String
+  receiverId       String
+  amount           Decimal
+  fee              Decimal           @default(0)
+  agentCommission  Decimal           @default(0)
+  systemCommission Decimal           @default(0)
+  type             TransactionType
+  status           TransactionStatus @default(PENDING)
+  transactionId    String            @unique
+  initiatedBy      String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   // Relations
   sender    User @relation("SentTransactions", fields: [senderId], references: [id])

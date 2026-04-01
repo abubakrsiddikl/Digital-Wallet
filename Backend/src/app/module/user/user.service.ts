@@ -38,8 +38,8 @@ const getAllUsers = async () => {
   return users;
 };
 
-//  Get Single User
-const getUserById = async (id: string) => {
+//  Get Me
+const getMyProfile = async (id: string) => {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id },
     omit: { password: true },
@@ -60,6 +60,22 @@ const updateUser = async (
 ) => {
   if (userData.role && requestedByRole !== "ADMIN") {
     throw new Error("Only Admin can update user role");
+  }
+
+  if (userData.role === "AGENT") {
+    userData.wallet = {
+      update: {
+        type: "AGENT",
+      },
+    };
+  }
+
+  if (userData.role === "USER") {
+    userData.wallet = {
+      update: {
+        type: "USER",
+      },
+    };
   }
 
   //  if password sent in update request, then hash the password before updating
@@ -89,7 +105,7 @@ const deleteUser = async (id: string) => {
 export const UserServices = {
   createUser,
   getAllUsers,
-  getUserById,
+  getMyProfile,
   updateUser,
   deleteUser,
 };
