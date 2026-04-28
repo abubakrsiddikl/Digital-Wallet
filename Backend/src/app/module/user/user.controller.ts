@@ -7,6 +7,7 @@ import httpStatus from "http-status-codes";
 
 // ─── Create User ─────────────────────────────────────────────
 const createUser = catchAsync(async (req: Request, res: Response) => {
+  console.log(req.body)
   const result = await UserServices.createUser(req.body);
 
   sendResponse(res, {
