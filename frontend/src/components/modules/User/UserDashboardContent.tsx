@@ -1,0 +1,216 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { IUser } from "@/types/auth.type";
+import {
+  Send,
+  ArrowUpFromLine,
+  PlusCircle,
+  Smartphone,
+  Eye,
+  EyeOff,
+  TrendingUp,
+  TrendingDown,
+  ArrowLeftRight,
+  Clock,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+interface UserDashboardClientProps {
+  user: IUser;
+}
+
+// ─── Quick action config ──────────────────────────────────────
+const QUICK_ACTIONS = [
+  {
+    label: "Send Money",
+    href: "/user/dashboard/send-money",
+    icon: Send,
+    color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-200 dark:border-emerald-800",
+  },
+  {
+    label: "Cash Out",
+    href: "/user/dashboard/cash-out",
+    icon: ArrowUpFromLine,
+    color: "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400",
+    border: "border-orange-200 dark:border-orange-800",
+  },
+  {
+    label: "Add Money",
+    href: "/user/dashboard/add-money",
+    icon: PlusCircle,
+    color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+    border: "border-blue-200 dark:border-blue-800",
+  },
+  {
+    label: "Recharge",
+    href: "/user/dashboard/recharge",
+    icon: Smartphone,
+    color: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400",
+    border: "border-purple-200 dark:border-purple-800",
+  },
+];
+
+// ─── Mock recent transactions (replace with real data) ────────
+const MOCK_TRANSACTIONS = [
+  { id: 1, type: "sent", label: "Sent to Rahim", amount: -500, time: "2 min ago", phone: "01711..." },
+  { id: 2, type: "received", label: "Received from Karim", amount: 1200, time: "1 hour ago", phone: "01833..." },
+  { id: 3, type: "cashout", label: "Cash Out", amount: -2000, time: "Yesterday", phone: "Agent" },
+  { id: 4, type: "received", label: "Add Money", amount: 5000, time: "2 days ago", phone: "Bank" },
+];
+
+// ─── Balance Card ─────────────────────────────────────────────
+const BalanceCard = ({ user }: { user: IUser }) => {
+  const [showBalance, setShowBalance] = useState(false);
+  const balance = user?.wallet?.balance ?? 0;
+
+  return (
+    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white shadow-xl shadow-emerald-900/20">
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/5" />
+      <div className="absolute -bottom-10 -left-6 h-32 w-32 rounded-full bg-white/5" />
+      <div className="absolute top-1/2 right-12 h-20 w-20 rounded-full bg-white/5" />
+
+      <CardContent className="relative p-6">
+        {/* Top row */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <p className="text-emerald-200 text-xs font-medium uppercase tracking-wider mb-1">
+              Available Balance
+            </p>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-bold tracking-tight">
+                {showBalance
+                  ? `৳ ${balance.toLocaleString("en-BD")}`
+                  : "৳ ••••••"}
+              </span>
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label={showBalance ? "Hide balance" : "Show balance"}
+              >
+                {showBalance
+                  ? <EyeOff className="h-4 w-4" />
+                  : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <Badge className="bg-white/15 text-white border-0 text-xs capitalize hover:bg-white/15">
+            {user?.role?.toLowerCase()}
+          </Badge>
+        </div>
+
+        {/* User info */}
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
+            {user?.name?.charAt(0)?.toUpperCase()}
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{user?.name}</p>
+            <p className="text-emerald-200 text-xs">{user?.phone ?? user?.email}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// ─── Quick Actions Grid ───────────────────────────────────────
+const QuickActions = () => (
+  <div>
+    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+      Quick Actions
+    </h2>
+    <div className="grid grid-cols-4 gap-3">
+      {QUICK_ACTIONS.map((action) => {
+        const Icon = action.icon;
+        return (
+          <Link
+            key={action.href}
+            href={action.href}
+            className={`flex flex-col items-center gap-2.5 rounded-2xl border p-3 md:p-4 transition-all hover:scale-105 hover:shadow-md active:scale-95 ${action.border}`}
+          >
+            <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${action.color}`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <span className="text-xs font-medium text-center leading-tight text-foreground">
+              {action.label}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  </div>
+);
+
+// ─── Recent Transactions ──────────────────────────────────────
+const RecentTransactions = () => (
+  <Card>
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-base font-semibold">Recent Transactions</CardTitle>
+        <Link
+          href="/user/dashboard/transactions"
+          className="text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline flex items-center gap-1"
+        >
+          See all
+          <ArrowLeftRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-0">
+      <div className="space-y-1">
+        {MOCK_TRANSACTIONS.map((tx, idx) => (
+          <div key={tx.id}>
+            <div className="flex items-center gap-3 py-2.5">
+              <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${
+                tx.amount > 0
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-50 dark:bg-red-950/40 text-red-500"
+              }`}>
+                {tx.amount > 0
+                  ? <TrendingUp className="h-4 w-4" />
+                  : <TrendingDown className="h-4 w-4" />}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-medium truncate">{tx.label}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {tx.time}
+                </p>
+              </div>
+              <span className={`text-sm font-semibold tabular-nums shrink-0 ${
+                tx.amount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+              }`}>
+                {tx.amount > 0 ? "+" : ""}৳{Math.abs(tx.amount).toLocaleString()}
+              </span>
+            </div>
+            {idx < MOCK_TRANSACTIONS.length - 1 && <Separator />}
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// ─── Main Dashboard ───────────────────────────────────────────
+const UserDashboardContent = ({ user }: UserDashboardClientProps) => {
+  return (
+    <div className="space-y-5 max-w-2xl mx-auto md:max-w-none">
+      {/* Balance Card */}
+      <BalanceCard user={user} />
+
+      {/* Quick Actions */}
+      <QuickActions />
+
+      {/* Recent Transactions */}
+      <RecentTransactions />
+    </div>
+  );
+};
+
+export default UserDashboardContent;

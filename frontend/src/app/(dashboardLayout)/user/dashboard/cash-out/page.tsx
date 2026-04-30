@@ -1,17 +1,16 @@
+import CashOutForm from "@/components/modules/User/CashOut/CashOutForm";
+
+
 const UserCashOutPage = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-lg mx-auto md:mx-0">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">User Cash Out</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Cash Out</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Manage your user cash out here.
+          Withdraw cash through a registered agent near you.
         </p>
       </div>
-
-      <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground text-sm">
-        {/* TODO: Add UserCashOutPage content */}
-        <p>🚧 This page is under construction.</p>
-      </div>
+      <CashOutForm />
     </div>
   );
 };
