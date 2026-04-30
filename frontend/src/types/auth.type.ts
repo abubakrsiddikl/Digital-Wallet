@@ -1,3 +1,5 @@
+import { IWallet } from "./wallet.type";
+
 export type TRole = "ADMIN" | "USER" | "AGENT";
 
 export interface IUser {
@@ -11,6 +13,7 @@ export interface IUser {
   isApproved: boolean;
   createdAt: string;
   updatedAt: string;
+  wallet?: IWallet;
 }
 
 // login response type

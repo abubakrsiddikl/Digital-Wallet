@@ -8,7 +8,8 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { deleteCookie, setCookie } from "./tokenHandlers";
 
 import { redirect } from "next/navigation";
-import { ILoginResponse, IUser } from "@/types/auth.type";
+import { ILoginResponse, IUser, TRole } from "@/types/auth.type";
+import { getDefaultDashboardRoute, isValidRedirectForRole } from "@/utils/auth-utils";
 
 // register api
 export const registerUser = async (
@@ -90,18 +91,18 @@ export const loginUser = async (
     throw new Error("Invalid Token");
   }
   // redirect(`/otp-verify?email=${validatedFiled.data.email}`);
-  //   const userRole: TRole = verifiedToken.role;
+    const userRole: TRole = verifiedToken.role;
 
-  //   if (redirectTo) {
-  //     const requestedPath = redirectTo.toString();
-  //     if (isValidRedirectForRole(requestedPath, userRole)) {
-  //       redirect(`${requestedPath}?loggedIn=true`);
-  //     } else {
-  //       redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
-  //     }
-  //   } else {
-  //     redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
-  //   }
+    if (redirectTo) {
+      const requestedPath = redirectTo.toString();
+      if (isValidRedirectForRole(requestedPath, userRole)) {
+        redirect(`${requestedPath}?loggedIn=true`);
+      } else {
+        redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
+      }
+    } else {
+      redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
+    }
 };
 
 // logout
@@ -113,7 +114,7 @@ export const logoutUser = async () => {
 
 // get user profile
 export const getUserProfile = async (): Promise<IUser> => {
-  const res = await apiRequest<IUser>("/user/me", {
+  const res = await apiRequest<IUser>("/users/me", {
     cache: "force-cache",
     next: { tags: ["user-info"] },
     method: "GET",
