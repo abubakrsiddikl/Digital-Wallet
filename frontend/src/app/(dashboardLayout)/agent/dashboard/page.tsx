@@ -56,7 +56,7 @@ const AgentDashboardPage = async () => {
     ],
   };
 
-  return <AgentDashboardContent user={user} stats={stats || {}} />;
+  return <AgentDashboardContent user={user} />;
 };
 
 export default AgentDashboardPage;

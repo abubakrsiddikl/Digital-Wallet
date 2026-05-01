@@ -9,15 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import InputFieldError from "@/components/shared/InputFieldError";
+import { sendMoneyUser } from "@/services/transaction/transaction.api";
 
-// ─── Fee calculator (backend এ verify করবে) ──────────────────
+
+// ─── Fee calculator (backend  verify ) ──────────────────
 const calcFee = (amount: number) => {
   if (!amount || amount <= 0) return 0;
   return Math.ceil(amount * 0.015); // 1.5% fee example
 };
-
+//  recipient phone 01712345672
 const SendMoneyForm = () => {
-  const [state, formAction, isPending] = useActionState(() => {}, null);
+  const [state, formAction, isPending] = useActionState(sendMoneyUser, null);
   const [showPin, setShowPin] = useState(false);
   const [amount, setAmount] = useState("");
 

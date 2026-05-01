@@ -30,7 +30,7 @@ interface AgentStats {
 
 interface AgentDashboardClientProps {
   user: IUser;
-  stats: AgentStats;
+  stats?: AgentStats;
 }
 
 // ─── Quick actions ────────────────────────────────────────────
@@ -177,8 +177,8 @@ const AgentDashboardContent = ({ user, stats }: AgentDashboardClientProps) => (
         );
       })}
     </div>
-    <StatsRow stats={stats} />
-    <RecentTransactions transactions={stats.recentTransactions} />
+    {/* <StatsRow stats={stats } />
+    <RecentTransactions transactions={stats } /> */}
   </div>
 );
 

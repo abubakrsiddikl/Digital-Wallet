@@ -1,4 +1,4 @@
-import MobileRechargeForm from "@/components/modules/User/Recharge/MobileRechargeForm";
+// import MobileRechargeForm from "@/components/modules/User/Recharge/MobileRechargeForm";
 
 const UserMobileRechargePage = () => {
   return (
@@ -9,7 +9,7 @@ const UserMobileRechargePage = () => {
           Recharge any mobile number instantly with your wallet balance.
         </p>
       </div>
-      <MobileRechargeForm />
+      {/* <MobileRechargeForm /> */}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import InputFieldError from "@/components/shared/InputFieldError";
+import { cashOutUserToAgent } from "@/services/transaction/transaction.api";
 
 // ─── Fee (Cash Out usually higher, e.g. 1.85%) ────────────────
 const calcFee = (amount: number) => {
@@ -17,7 +18,7 @@ const calcFee = (amount: number) => {
 };
 
 const CashOutForm = () => {
-  const [state, formAction, isPending] = useActionState(()=>{}, null);
+  const [state, formAction, isPending] = useActionState(cashOutUserToAgent, null);
   const [showPin, setShowPin] = useState(false);
   const [amount, setAmount] = useState("");
 

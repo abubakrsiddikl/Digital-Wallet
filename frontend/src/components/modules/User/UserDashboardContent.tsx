@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { IUser } from "@/types/auth.type";
+import { format } from "date-fns";
 import {
   Send,
   ArrowUpFromLine,
@@ -18,9 +19,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ITransaction } from "@/types/transaction";
 
 interface UserDashboardClientProps {
   user: IUser;
+  transactions?: ITransaction[]; // Optional, can be fetched separately
 }
 
 // ─── Quick action config ──────────────────────────────────────
@@ -29,14 +32,16 @@ const QUICK_ACTIONS = [
     label: "Send Money",
     href: "/user/dashboard/send-money",
     icon: Send,
-    color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
+    color:
+      "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
     border: "border-emerald-200 dark:border-emerald-800",
   },
   {
     label: "Cash Out",
     href: "/user/dashboard/cash-out",
     icon: ArrowUpFromLine,
-    color: "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400",
+    color:
+      "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400",
     border: "border-orange-200 dark:border-orange-800",
   },
   {
@@ -50,17 +55,46 @@ const QUICK_ACTIONS = [
     label: "Recharge",
     href: "/user/dashboard/recharge",
     icon: Smartphone,
-    color: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400",
+    color:
+      "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400",
     border: "border-purple-200 dark:border-purple-800",
   },
 ];
 
 // ─── Mock recent transactions (replace with real data) ────────
 const MOCK_TRANSACTIONS = [
-  { id: 1, type: "sent", label: "Sent to Rahim", amount: -500, time: "2 min ago", phone: "01711..." },
-  { id: 2, type: "received", label: "Received from Karim", amount: 1200, time: "1 hour ago", phone: "01833..." },
-  { id: 3, type: "cashout", label: "Cash Out", amount: -2000, time: "Yesterday", phone: "Agent" },
-  { id: 4, type: "received", label: "Add Money", amount: 5000, time: "2 days ago", phone: "Bank" },
+  {
+    id: 1,
+    type: "sent",
+    label: "Sent to Rahim",
+    amount: -500,
+    time: "2 min ago",
+    phone: "01711...",
+  },
+  {
+    id: 2,
+    type: "received",
+    label: "Received from Karim",
+    amount: 1200,
+    time: "1 hour ago",
+    phone: "01833...",
+  },
+  {
+    id: 3,
+    type: "cashout",
+    label: "Cash Out",
+    amount: -2000,
+    time: "Yesterday",
+    phone: "Agent",
+  },
+  {
+    id: 4,
+    type: "received",
+    label: "Add Money",
+    amount: 5000,
+    time: "2 days ago",
+    phone: "Bank",
+  },
 ];
 
 // ─── Balance Card ─────────────────────────────────────────────
@@ -93,9 +127,11 @@ const BalanceCard = ({ user }: { user: IUser }) => {
                 className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 aria-label={showBalance ? "Hide balance" : "Show balance"}
               >
-                {showBalance
-                  ? <EyeOff className="h-4 w-4" />
-                  : <Eye className="h-4 w-4" />}
+                {showBalance ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -111,7 +147,9 @@ const BalanceCard = ({ user }: { user: IUser }) => {
           </div>
           <div>
             <p className="text-sm font-semibold">{user?.name}</p>
-            <p className="text-emerald-200 text-xs">{user?.phone ?? user?.email}</p>
+            <p className="text-emerald-200 text-xs">
+              {user?.phone ?? user?.email}
+            </p>
           </div>
         </div>
       </CardContent>
@@ -134,7 +172,9 @@ const QuickActions = () => (
             href={action.href}
             className={`flex flex-col items-center gap-2.5 rounded-2xl border p-3 md:p-4 transition-all hover:scale-105 hover:shadow-md active:scale-95 ${action.border}`}
           >
-            <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${action.color}`}>
+            <div
+              className={`h-11 w-11 rounded-xl flex items-center justify-center ${action.color}`}
+            >
               <Icon className="h-5 w-5" />
             </div>
             <span className="text-xs font-medium text-center leading-tight text-foreground">
@@ -148,57 +188,106 @@ const QuickActions = () => (
 );
 
 // ─── Recent Transactions ──────────────────────────────────────
-const RecentTransactions = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <div className="flex items-center justify-between">
-        <CardTitle className="text-base font-semibold">Recent Transactions</CardTitle>
-        <Link
-          href="/user/dashboard/transactions"
-          className="text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline flex items-center gap-1"
-        >
-          See all
-          <ArrowLeftRight className="h-3 w-3" />
-        </Link>
-      </div>
-    </CardHeader>
-    <CardContent className="pt-0">
-      <div className="space-y-1">
-        {MOCK_TRANSACTIONS.map((tx, idx) => (
-          <div key={tx.id}>
-            <div className="flex items-center gap-3 py-2.5">
-              <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${
-                tx.amount > 0
-                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-                  : "bg-red-50 dark:bg-red-950/40 text-red-500"
-              }`}>
-                {tx.amount > 0
-                  ? <TrendingUp className="h-4 w-4" />
-                  : <TrendingDown className="h-4 w-4" />}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">{tx.label}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {tx.time}
-                </p>
-              </div>
-              <span className={`text-sm font-semibold tabular-nums shrink-0 ${
-                tx.amount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
-              }`}>
-                {tx.amount > 0 ? "+" : ""}৳{Math.abs(tx.amount).toLocaleString()}
-              </span>
-            </div>
-            {idx < MOCK_TRANSACTIONS.length - 1 && <Separator />}
-          </div>
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-);
+const RecentTransactions = ({
+  transactions,
+}: {
+  transactions: ITransaction[];
+}) => {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">
+            Recent Transactions
+          </CardTitle>
+          <Link
+            href="/user/dashboard/transactions"
+            className="text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline flex items-center gap-1"
+          >
+            See all
+            <ArrowLeftRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-1">
+          {transactions.length > 0 ? (
+            transactions.map((tx, idx) => {
+              // Direction অনুযায়ী আইকন এবং কালার সেট করা
+              const isReceived = tx.direction === "received";
+              const amountValue = parseFloat(tx.amount); // স্ট্রিংকে নাম্বারে কনভার্ট
+
+              return (
+                <div key={tx.id}>
+                  <div className="flex items-center gap-3 py-2.5">
+                    {/* আইকন সেকশন */}
+                    <div
+                      className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${
+                        isReceived
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                          : "bg-red-50 dark:bg-red-950/40 text-red-500"
+                      }`}
+                    >
+                      {isReceived ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4" />
+                      )}
+                    </div>
+
+                    {/* বিবরণ সেকশন */}
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium truncate">
+                        {/* Direction অনুযায়ী নাম দেখানো */}
+                        {isReceived
+                          ? `Received from ${tx.from.name}`
+                          : `Sent to ${tx.to.name}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {/* ISO ডেট স্ট্রিং ফরম্যাট করা */}
+                        {format(new Date(tx.createdAt), "dd MMM, hh:mm a")}
+                      </p>
+                    </div>
+
+                    {/* টাকা এবং ফি সেকশন */}
+                    <div className="text-right shrink-0">
+                      <p
+                        className={`text-sm font-semibold tabular-nums ${
+                          isReceived
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {isReceived ? "+" : "-"}৳{amountValue.toLocaleString()}
+                      </p>
+                      {tx.fee !== "0" && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Fee: ৳{tx.fee}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {idx < transactions.length - 1 && <Separator />}
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-sm text-center py-4 text-muted-foreground">
+              No transactions found.
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // ─── Main Dashboard ───────────────────────────────────────────
-const UserDashboardContent = ({ user }: UserDashboardClientProps) => {
+const UserDashboardContent = ({
+  user,
+  transactions,
+}: UserDashboardClientProps) => {
   return (
     <div className="space-y-5 max-w-2xl mx-auto md:max-w-none">
       {/* Balance Card */}
@@ -208,7 +297,7 @@ const UserDashboardContent = ({ user }: UserDashboardClientProps) => {
       <QuickActions />
 
       {/* Recent Transactions */}
-      <RecentTransactions />
+      <RecentTransactions transactions={transactions as ITransaction[]} />
     </div>
   );
 };

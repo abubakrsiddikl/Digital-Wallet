@@ -1,4 +1,4 @@
-import AgentCashInForm from "@/components/modules/Agent/CashIn/AgentCashInForm";
+// import AgentCashInForm from "@/components/modules/Agent/CashIn/AgentCashInForm";
 
 
 const AgentCashInPage = () => {
@@ -10,7 +10,7 @@ const AgentCashInPage = () => {
           Add money to a user&apos;s wallet. You give cash, user balance increases.
         </p>
       </div>
-      <AgentCashInForm />
+      {/* <AgentCashInForm /> */}
     </div>
   );
 };

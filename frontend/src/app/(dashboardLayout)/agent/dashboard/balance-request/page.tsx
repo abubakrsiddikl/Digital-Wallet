@@ -1,4 +1,4 @@
-import BalanceRequestForm from "@/components/modules/Agent/BalanceRequest/BalanceRequestForm";
+// import BalanceRequestForm from "@/components/modules/Agent/BalanceRequest/BalanceRequestForm";
 
 
 const AgentBalanceRequestPage = () => {
@@ -10,7 +10,7 @@ const AgentBalanceRequestPage = () => {
           Request balance from admin to top up your agent wallet.
         </p>
       </div>
-      <BalanceRequestForm />
+      {/* <BalanceRequestForm /> */}
     </div>
   );
 };

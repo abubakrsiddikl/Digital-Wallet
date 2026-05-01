@@ -1,4 +1,4 @@
-import AgentCashOutForm from "@/components/modules/Agent/CashOut/AgentCashOutForm";
+// import AgentCashOutForm from "@/components/modules/Agent/CashOut/AgentCashOutForm";
 
 
 const AgentCashOutPage = () => {
@@ -10,7 +10,7 @@ const AgentCashOutPage = () => {
           User gives you cash, their wallet balance decreases. You receive the amount.
         </p>
       </div>
-      <AgentCashOutForm />
+      {/* <AgentCashOutForm /> */}
     </div>
   );
 };
