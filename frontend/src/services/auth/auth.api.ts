@@ -36,7 +36,7 @@ export const registerUser = async (
     };
   }
 
-  const res = await apiRequest("/user/register", {
+  const res = await apiRequest("/users/register", {
     method: "POST",
     body: JSON.stringify(validatedFiled.data),
   });
