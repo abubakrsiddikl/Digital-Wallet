@@ -1,17 +1,16 @@
+import AgentCashInForm from "@/components/modules/Agent/CashIn/AgentCashInForm";
+
+
 const AgentCashInPage = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-lg mx-auto md:mx-0">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agent Cash In</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Cash In</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Manage your agent cash in here.
+          Add money to a user&apos;s wallet. You give cash, user balance increases.
         </p>
       </div>
-
-      <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground text-sm">
-        {/* TODO: Add AgentCashInPage content */}
-        <p>🚧 This page is under construction.</p>
-      </div>
+      <AgentCashInForm />
     </div>
   );
 };
