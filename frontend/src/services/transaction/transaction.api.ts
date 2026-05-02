@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  cashInAgentToUserZodSchema,
   cashOutUserToAgentZodSchema,
   sendMoneyUserZodSchema,
 } from "@/zodSchema/transaction.schema";
 import { apiRequest } from "../apiClient";
-import { ITransaction } from "@/types/transaction";
+import { ITransaction } from "@/types/transaction.type";
 import { IResponse } from "@/types";
 
 // send money to user<-->user
@@ -78,6 +79,39 @@ export const cashOutUserToAgent = async (
   // console.log(validatedFiled.data,"vdata")
 
   const res = await apiRequest("/transaction/cash-out", {
+    method: "POST",
+    body: JSON.stringify(validatedFiled.data),
+  });
+
+  return res;
+};
+
+// cash in from agent : agent --> user
+export const cashInAgentToUser = async (
+  _currentState: any,
+  formData: FormData,
+): Promise<any> => {
+  const data = {
+    userPhone: formData.get("userPhone"),
+    amount: parseFloat(formData.get("amount") as string),
+    pin: formData.get("pin"),
+  };
+  // console.log(data)
+
+  const validatedFiled = cashInAgentToUserZodSchema.safeParse(data);
+
+  if (!validatedFiled.success) {
+    return {
+      success: false,
+      errors: validatedFiled.error.issues.map((issue) => ({
+        field: issue.path[0],
+        message: issue.message,
+      })),
+    };
+  }
+  // console.log(validatedFiled.data,"vdata")
+
+  const res = await apiRequest("/transaction/cash-in", {
     method: "POST",
     body: JSON.stringify(validatedFiled.data),
   });

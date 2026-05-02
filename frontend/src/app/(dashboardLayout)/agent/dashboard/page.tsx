@@ -1,11 +1,14 @@
 import AgentDashboardContent from "@/components/modules/Agent/AgentDashboardContent";
 import { getUserProfile } from "@/services/auth/auth.api";
 
+
 const AgentDashboardPage = async () => {
   const [user] = await Promise.all([
     getUserProfile(),
+   
     // getAgentDashboardStats(),
   ]);
+ 
   const stats = {
     totalCashIn: 125000,
     totalCashOut: 85000,

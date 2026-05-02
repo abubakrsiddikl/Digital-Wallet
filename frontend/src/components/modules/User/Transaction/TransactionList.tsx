@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import { cn } from "@/lib/utils";
-import { ITransaction, TransactionType } from "@/types/transaction";
+import { ITransaction, TransactionType } from "@/types/transaction.type";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ interface TransactionListProps {
 // ─── Config maps ──────────────────────────────────────────────
 const TX_CONFIG: Record<TransactionType, { label: string; icon: React.ElementType; color: string; amountColor: string; sign: "+" | "-" }> = {
   SEND_MONEY: { label: "Sent",       icon: TrendingDown,   color: "bg-red-50 dark:bg-red-950/30 text-red-500",           amountColor: "text-red-500",                                      sign: "-" },
-  RECEIVE:    { label: "Received",   icon: TrendingUp,     color: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400", amountColor: "text-emerald-600 dark:text-emerald-400", sign: "+" },
+  // RECEIVE:    { label: "Received",   icon: TrendingUp,     color: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400", amountColor: "text-emerald-600 dark:text-emerald-400", sign: "+" },
   CASH_OUT:   { label: "Cash Out",   icon: ArrowLeftRight, color: "bg-orange-50 dark:bg-orange-950/30 text-orange-500",  amountColor: "text-orange-500",                                   sign: "-" },
   CASH_IN:    { label: "Cash In",    icon: TrendingUp,     color: "bg-blue-50 dark:bg-blue-950/30 text-blue-500",        amountColor: "text-blue-500",                                     sign: "+" },
   RECHARGE:   { label: "Recharge",   icon: Smartphone,     color: "bg-purple-50 dark:bg-purple-950/30 text-purple-500",  amountColor: "text-purple-500",                                   sign: "-" },
@@ -40,7 +40,7 @@ const STATUS_BADGE: Record<string, string> = {
   FAILED:  "bg-red-100 dark:bg-red-950/40 text-red-600",
 };
 
-const TX_TYPES = ["All", "SEND", "RECEIVE", "CASH_OUT", "CASH_IN", "RECHARGE", "ADD_MONEY"];
+const TX_TYPES = ["All", "SEND_MONEY", "CASH_OUT", "CASH_IN", "RECHARGE", "ADD_MONEY"];
 
 // ─── Filter bar ───────────────────────────────────────────────
 const FilterBar = ({ onFilter }: { onFilter: (key: string, value: string) => void }) => {
@@ -56,7 +56,7 @@ const FilterBar = ({ onFilter }: { onFilter: (key: string, value: string) => voi
             key={type}
             onClick={() => onFilter("type", type === "All" ? "" : type)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-all",
+              "rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer",
               activeType === type || (type === "All" && !activeType)
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "border-border text-muted-foreground hover:bg-muted"

@@ -45,6 +45,7 @@ const QUICK_ACTIONS = [
 const AgentBalanceCard = ({ user }: { user: IUser }) => {
   const [show, setShow] = useState(false);
   const balance = user?.wallet?.balance ?? 0;
+  
 
   return (
     <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-xl shadow-blue-900/20">

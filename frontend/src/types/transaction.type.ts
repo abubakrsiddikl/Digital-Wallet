@@ -2,7 +2,6 @@ import { IUser } from "./auth.type";
 
 export type TransactionType =
   | "SEND_MONEY"
-  | "RECEIVE"
   | "CASH_OUT"
   | "CASH_IN"
   | "RECHARGE"
@@ -12,7 +11,10 @@ type TransactionDirection = "sent" | "received";
 export interface ITransaction {
   id: string;
   transactionId: string;
+  agentCommission: string;
+  systemCommission: string;
   amount: string;
+  status: "SUCCESS" | "PENDING" | "FAILED";
   fee: string;
   type: TransactionType;
   direction: TransactionDirection;

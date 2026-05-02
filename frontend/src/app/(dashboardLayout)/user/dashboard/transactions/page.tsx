@@ -1,4 +1,5 @@
 import TransactionList from "@/components/modules/User/Transaction/TransactionList";
+import { queryStringFormatter } from "@/lib/formatter";
 import { getMyTransactions } from "@/services/transaction/transaction.api";
 
 
@@ -6,13 +7,13 @@ import { getMyTransactions } from "@/services/transaction/transaction.api";
 const UserTransactionsPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; from?: string; to?: string; page?: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
-  const params = await searchParams;
+ const searchParamsObj = await searchParams;
+  const queryString = queryStringFormatter(searchParamsObj);
  
-  
-  const transactions = await getMyTransactions("type=CASH_OUT&limit=1");
- 
+  const transactions = await getMyTransactions(queryString);
+// console.log(transactions)
 
   return (
     <div className="space-y-6">
