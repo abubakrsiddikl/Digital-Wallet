@@ -5,6 +5,7 @@ import { Decimal } from "@prisma/client/runtime/client";
 import { TransactionType } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 
 // ─── Fee calculation ──────────────────────────────────────────
 const calculateFee = (amount: Decimal, type: string) => {
@@ -45,11 +46,14 @@ const sendMoney = async ({
   // pin verify
   await verifyPin(senderId, pin);
 
+  // console.log({receiverPhone})
+
   const result = await prisma.$transaction(async (tx) => {
     // ─── Step 1: Phone  receiver find ──────────────────
     const receiver = await tx.user.findUnique({
       where: { phone: receiverPhone },
     });
+    // console.log("tx reciver",receiver)
 
     if (!receiver) {
       throw new AppError(httpStatus.NOT_FOUND, "Receiver not found");
@@ -100,6 +104,16 @@ const sendMoney = async ({
       data: { balance: { increment: decimalAmount } },
     });
 
+    // system wallet balance increase (fee)
+    const systemWallet = await tx.wallet.findFirstOrThrow({
+      where: { type: "SYSTEM" },
+    });
+
+    await tx.wallet.update({
+      where: { id: systemWallet.id },
+      data: { balance: { increment: fee } },
+    });
+
     // ─── Step 5: Transaction record ───────────────────────────
     const transaction = await tx.transaction.create({
       data: {
@@ -108,6 +122,7 @@ const sendMoney = async ({
         amount: decimalAmount,
         fee,
         agentCommission: 0,
+        systemCommission: fee,
         type: TransactionType.SEND_MONEY,
         status: "SUCCESS",
         transactionId: transactionId,
@@ -302,10 +317,77 @@ const cashOut = async ({
 };
 
 // ─── My Transaction History ───────────────────────────────
-const getMyTransactions = async (userId: string) => {
+const getMyTransactions = async (
+  userId: string,
+  filters: any,
+  options: IOptions,
+) => {
+  const { searchTerm, ...filterData } = filters;
+
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  // 🔥 where conditions
+  const andConditions: any[] = [];
+
+  // 🔥 user condition (must)
+  andConditions.push({
+    OR: [{ senderId: userId }, { receiverId: userId }],
+  });
+
+  // 🔥 search (name, phone, transactionId)
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        {
+          transactionId: {
+            contains: searchTerm,
+            mode: "insensitive",
+          },
+        },
+        {
+          sender: {
+            name: { contains: searchTerm, mode: "insensitive" },
+          },
+        },
+        {
+          receiver: {
+            name: { contains: searchTerm, mode: "insensitive" },
+          },
+        },
+        {
+          sender: {
+            phone: { contains: searchTerm },
+          },
+        },
+        {
+          receiver: {
+            phone: { contains: searchTerm },
+          },
+        },
+      ],
+    });
+  }
+
+  // 🔥 filter (type, status)
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.entries(filterData).map(([key, value]) => ({
+        [key]: value,
+      })),
+    });
+  }
+
+  const whereConditions =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  // 🔥 query
   const transactions = await prisma.transaction.findMany({
-    where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
     },
     include: {
       sender: {
@@ -327,7 +409,11 @@ const getMyTransactions = async (userId: string) => {
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+  });
+
+  // 🔥 total count (pagination meta)
+  const total = await prisma.transaction.count({
+    where: whereConditions,
   });
 
   // 🔥 transform data
@@ -340,17 +426,24 @@ const getMyTransactions = async (userId: string) => {
       amount: trx.amount,
       fee: trx.fee,
       type: trx.type,
-
-      direction: isSender ? "sent" : "received", // 🔥 main thing
-
+      agentCommission: trx.agentCommission,
+      systemCommission: trx.systemCommission,
+      status: trx.status,
+      direction: isSender ? "sent" : "received",
       from: trx.sender,
       to: trx.receiver,
-
       createdAt: trx.createdAt,
     };
   });
 
-  return formatted;
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: formatted,
+  };
 };
 
 // ─── Admin — All Transaction ───────────────────────────────────

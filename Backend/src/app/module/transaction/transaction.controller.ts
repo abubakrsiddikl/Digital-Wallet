@@ -3,11 +3,12 @@ import catchAsync from "../../utils/catchAsync";
 import { TransactionServices } from "./transaction.service";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes";
+import pick from "../../utils/pick";
 
 // ─── Send Money ───────────────────────────────────────────────
 const sendMoney = catchAsync(async (req: Request, res: Response) => {
   const senderId = req.user?.id as string;
-  const { receiverPhone, amount, pin } = req.body; // ID এর বদলে phone
+  const { receiverPhone, amount, pin } = req.body; 
 
   const result = await TransactionServices.sendMoney({
     senderId,
@@ -68,13 +69,20 @@ const cashOut = catchAsync(async (req: Request, res: Response) => {
 const getMyTransactions = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
 
-  const result = await TransactionServices.getMyTransactions(userId);
+  // pagination options
+  const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
+
+  //  filter + search
+  const filters = pick(req.query, ["searchTerm", "type", "status"]);
+
+  const result = await TransactionServices.getMyTransactions(userId, filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Transactions fetched successfully",
-    data: result,
+    meta: result.meta,
+    data: result.data,
   });
 });
 

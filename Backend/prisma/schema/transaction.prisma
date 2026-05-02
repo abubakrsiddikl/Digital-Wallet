@@ -6,6 +6,7 @@ enum TransactionType {
   CASH_OUT
   PAYMENT
   ADD_MONEY
+  RECHARGE
 }
 
 enum TransactionStatus {
