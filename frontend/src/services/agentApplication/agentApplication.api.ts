@@ -6,7 +6,7 @@ import {
 } from "@/zodSchema/agentApplication.schema";
 import { apiRequest } from "../apiClient";
 import { IResponse } from "@/types";
-import { IAgentRequest } from "@/types/agentApplication.type";
+import { IAgentApplication, IAgentBalanceRequest } from "@/types/agentApplication.type";
 
 // ─── Apply as agent ───────────────────────────────────────────
 export const applyAsAgent = async (
@@ -86,9 +86,62 @@ export const requestBalance = async (
 // ─── Get my application status ────────────────────────────────
 
 export const getMyApplicationStatus = async (): Promise<
-  IResponse<IAgentRequest>
+  IResponse<IAgentApplication>
 > => {
-  const res = await apiRequest<IAgentRequest>(`/agent/apply/status`);
-  console.log(res.data);
+  const res = await apiRequest<IAgentApplication>(`/agent/apply/status`);
+  // console.log(res.data);
+  return res;
+};
+
+
+// ─── GET all agent applications (admin) 
+export const getAdminApplications = async (
+  queryString?: string,
+): Promise<IResponse<IAgentApplication[]>> => {
+  return apiRequest<IAgentApplication[]>(
+    `/agent/admin/applications?${queryString ?? ""}`,
+  );
+};
+
+// ─── PATCH approve/reject application ────────────────────────
+export const approveApplication = async (
+  _currentState: any,
+  formData: FormData,
+): Promise<any> => {
+  const id = formData.get("applicationId") as string;
+  const status = formData.get("action") as "APPROVE" | "REJECT";
+  const reviewNote = (formData.get("reviewNote") as string) || undefined;
+
+  const res = await apiRequest(`/agent/admin/applications/${id}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify({ status, reviewNote }),
+  });
+
+  return res;
+};
+
+// ─── GET all balance requests ─────────────────────────────────
+export const getAdminBalanceRequests = async (
+  queryString?: string,
+): Promise<IResponse<IAgentBalanceRequest[]>> => {
+  return apiRequest<IAgentBalanceRequest[]>(
+    `/agent/admin/balance-requests?${queryString ?? ""}`,
+  );
+};
+
+// ─── PATCH approve/reject balance request ─────────────────────
+export const approveBalanceRequest = async (
+  _currentState: any,
+  formData: FormData,
+): Promise<any> => {
+  const id = formData.get("requestId") as string;
+  const status = formData.get("action") as "APPROVE" | "REJECT";
+  const reviewNote = (formData.get("reviewNote") as string) || undefined;
+
+  const res = await apiRequest(`/agent/admin/balance-requests/${id}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify({ status, reviewNote }),
+  });
+
   return res;
 };

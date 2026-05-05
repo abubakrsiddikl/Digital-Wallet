@@ -1,6 +1,6 @@
 import { CheckCircle, Clock, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { IAgentRequest } from "@/types/agentApplication.type";
+import { IAgentApplication} from "@/types/agentApplication.type";
 import AgentApplyForm from "./AgentApplyForm";
 
 
@@ -8,7 +8,7 @@ import AgentApplyForm from "./AgentApplyForm";
 const ApplicationStatusCard = ({
   application,
 }: {
-  application: IAgentRequest;
+  application: IAgentApplication;
 }) => {
   const config = {
     PENDING: {
