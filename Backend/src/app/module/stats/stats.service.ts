@@ -132,4 +132,173 @@ const getAgentStats = async (userId: string) => {
   return data;
 };
 
-export const StatsServices = { getAgentStats };
+const getAdminStats = async () => {
+  // Run all queries in parallel
+  const [
+    totalUsers,
+    totalAgents,
+    transactionAgg,
+    pendingAgentRequests,
+    recentTransactions,
+  ] = await Promise.all([
+    // ── Total regular users
+    prisma.user.count({
+      where: { role: "USER" },
+    }),
+
+    // ── Total approved agents
+    prisma.user.count({
+      where: { role: "AGENT" },
+    }),
+
+    // ── Total txn count + volume + systemCommission
+    prisma.transaction.aggregate({
+      where: { status: "SUCCESS" },
+      _count: { id: true },
+      _sum: {
+        amount: true,
+        systemCommission: true,
+      },
+    }),
+
+    // ── Pending balance requests (AGENT → ADMIN)
+    prisma.user.count({
+      where: { role: "AGENT", isApproved: false },
+    }),
+
+    // ── Last 10 transactions
+    prisma.transaction.findMany({
+      where: { status: "SUCCESS" },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  // ── Shape recent transactions to match ITransaction ────────
+  const shapedTransactions = recentTransactions.map((tx) => ({
+    id: tx.id,
+    transactionId: tx.transactionId,
+    amount: tx.amount.toString(),
+    fee: tx.fee.toString(),
+    agentCommission: tx.agentCommission.toString(),
+    systemCommission: tx.systemCommission.toString(),
+    type: tx.type,
+    status: tx.status,
+    createdAt: tx.createdAt.toISOString(),
+    updatedAt: tx.updatedAt.toISOString(),
+    from: {
+      id: tx.sender.id,
+      name: tx.sender.name,
+      email: tx.sender.email,
+      phone: tx.sender.phone,
+      role: tx.sender.role,
+    },
+    to: {
+      id: tx.receiver.id,
+      name: tx.receiver.name,
+      email: tx.receiver.email,
+      phone: tx.receiver.phone,
+      role: tx.receiver.role,
+    },
+  }));
+
+  return {
+    totalUsers,
+    totalAgents,
+    totalTransactions: transactionAgg._count.id,
+    totalVolume: Number(transactionAgg._sum.amount ?? 0),
+    totalSystemCommission: Number(transactionAgg._sum.systemCommission ?? 0),
+    pendingAgentRequests,
+    recentTransactions: shapedTransactions,
+  };
+};
+
+const getSystemStats = async () => {
+  const wallets = await prisma.wallet.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          image: true,
+          status: true,
+          isApproved: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
+  });
+
+  const balanceAgg = await prisma.wallet.groupBy({
+    by: ["userId"],
+    _sum: {
+      balance: true,
+    },
+  });
+
+  let totalUserBalance = 0;
+  let totalAgentBalance = 0;
+  let totalSystemBalance = 0;
+
+  wallets.forEach((wallet) => {
+    const balance = Number(wallet.balance);
+    if (wallet.user?.role === "USER") {
+      totalUserBalance += balance;
+    } else if (wallet.user?.role === "AGENT") {
+      totalAgentBalance += balance;
+    } else if (wallet.user?.role === "ADMIN") {
+      totalSystemBalance += balance;
+    }
+  });
+
+  const transactionAgg = await prisma.transaction.aggregate({
+    where: { status: "SUCCESS" },
+    _sum: {
+      systemCommission: true,
+    },
+  });
+
+  const formattedWallets = wallets.map((w) => ({
+    id: w.id,
+    user: w.user,
+    balance: w.balance.toString(),
+    isBlocked: w.user?.status === "BLOCKED",
+    type: w.user?.role,
+    createdAt: w.createdAt.toISOString(),
+    updatedAt: w.updatedAt.toISOString(),
+  }));
+
+  return {
+   totalSystemBalance: Number(totalSystemBalance.toFixed(2)),
+  totalUserBalance: Number(totalUserBalance.toFixed(2)),
+  totalAgentBalance: Number(totalAgentBalance.toFixed(2)),
+  totalCommissionEarned: Number((transactionAgg._sum.systemCommission ?? 0).toFixed(2)),
+    wallets: formattedWallets,
+  };
+};
+
+export const StatsServices = { getAgentStats, getAdminStats, getSystemStats };

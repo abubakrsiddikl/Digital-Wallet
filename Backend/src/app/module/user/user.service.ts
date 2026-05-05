@@ -1,6 +1,7 @@
-import type { Prisma } from "@prisma/client";
+import { UserRole, type Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import bcrypt from "bcrypt";
+import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 
 //  Create User & wallet
 
@@ -27,15 +28,60 @@ const createUser = async (userData: Prisma.UserCreateInput) => {
 
 //  Get All Users
 
-const getAllUsers = async () => {
+const getAllUsers = async (filters: any, options: IOptions) => {
+  const { searchTerm, ...filterData } = filters;
+
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  // 🔥 where conditions
+  const andConditions: any[] = [];
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        { name: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+        { phone: { contains: searchTerm, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  // 🔥 filter (status)
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.entries(filterData).map(([key, value]) => ({
+        [key]: value,
+      })),
+    });
+  }
+
+  const whereConditions =
+    andConditions.length > 0 ? { AND: andConditions } : {};
   const users = await prisma.user.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
     omit: { password: true },
     include: {
       wallet: true,
     },
   });
 
-  return users;
+  const total = await prisma.user.count({
+    where: whereConditions,
+  });
+
+  return {
+    data: users,
+    meta: {
+      page,
+      limit,
+      total,
+    },
+  };
 };
 
 //  Get Me
@@ -51,13 +97,62 @@ const getMyProfile = async (id: string) => {
   return user;
 };
 
-//  Update User
+// get All agents
+const getAllAgents = async (filters: any, options: IOptions) => {
+  const { searchTerm, ...filterData } = filters;
+  const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
 
+  const andConditions: any[] = [
+    { role: UserRole.AGENT }
+  ];
+
+ 
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        { name: { contains: searchTerm, mode: "insensitive" } },
+        { phone: { contains: searchTerm } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+      ],
+    });
+  }
+
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.entries(filterData).map(([key, value]) => ({
+        [key]: value,
+      })),
+    });
+  }
+
+  const whereConditions = { AND: andConditions };
+
+  const result = await prisma.user.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: { [sortBy]: sortOrder },
+    include: {
+        wallet: true
+    }
+  });
+
+  const total = await prisma.user.count({ where: whereConditions });
+
+  return {
+    meta: { page, limit, total },
+    data: result,
+  };
+};
+
+//  Update User
 const updateUser = async (
   id: string,
   userData: Prisma.UserUpdateInput,
   requestedByRole: string,
 ) => {
+  console.log({id,userData})
   if (userData.role && requestedByRole !== "ADMIN") {
     throw new Error("Only Admin can update user role");
   }
@@ -108,4 +203,5 @@ export const UserServices = {
   getMyProfile,
   updateUser,
   deleteUser,
+  getAllAgents,
 };

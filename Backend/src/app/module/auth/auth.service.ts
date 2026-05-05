@@ -7,6 +7,9 @@ const login = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
     where: { email: payload.email, status: "ACTIVE" },
   });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found. Please create an account first.");
+  }
 
   const isCorrectPassword = await bcrypt.compare(
     payload.password,

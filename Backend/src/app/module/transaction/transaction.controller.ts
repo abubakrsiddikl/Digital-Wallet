@@ -88,13 +88,19 @@ const getMyTransactions = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Admin — All Transaction ───────────────────────────────────
 const getAllTransactions = catchAsync(async (req: Request, res: Response) => {
-  const result = await TransactionServices.getAllTransactions();
+   // pagination options
+  const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
+
+  //  filter + search
+  const filters = pick(req.query, ["searchTerm", "type", "status"]);
+  const result = await TransactionServices.getAllTransactions(filters,options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "All transactions fetched successfully",
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
 

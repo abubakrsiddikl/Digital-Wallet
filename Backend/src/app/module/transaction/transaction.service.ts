@@ -29,7 +29,7 @@ const verifyPin = async (userId: string, pin: string) => {
   }
 };
 
-// ─── Send Money (User → User) ─────────────────────────────────
+// ─── Send Money (User → User) 
 const sendMoney = async ({
   senderId,
   receiverPhone,
@@ -136,7 +136,7 @@ const sendMoney = async ({
   return result;
 };
 
-// ─── Cash In (Agent → User) ───────────────────────────────────
+// ─── Cash In (Agent → User) 
 
 const cashIn = async ({
   agentId,
@@ -215,7 +215,7 @@ const cashIn = async ({
   return result;
 };
 
-// ─── Cash Out (User → Agent) ──────────────────────────────────
+// ─── Cash Out (User → Agent) 
 
 const cashOut = async ({
   userId,
@@ -316,7 +316,7 @@ const cashOut = async ({
   return result;
 };
 
-// ─── My Transaction History ───────────────────────────────
+// ─── My Transaction History 
 const getMyTransactions = async (
   userId: string,
   filters: any,
@@ -446,17 +446,121 @@ const getMyTransactions = async (
   };
 };
 
-// ─── Admin — All Transaction ───────────────────────────────────
-const getAllTransactions = async () => {
+// ─── Admin — All Transaction 
+const getAllTransactions = async (filters: any, options: IOptions) => {
+  const { searchTerm, ...filterData } = filters;
+
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  // 🔥 where conditions
+  const andConditions: any[] = [];
+
+  // 🔥 search (name, phone, transactionId)
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        {
+          transactionId: {
+            contains: searchTerm,
+            mode: "insensitive",
+          },
+        },
+        {
+          sender: {
+            name: { contains: searchTerm, mode: "insensitive" },
+          },
+        },
+        {
+          receiver: {
+            name: { contains: searchTerm, mode: "insensitive" },
+          },
+        },
+        {
+          sender: {
+            phone: { contains: searchTerm },
+          },
+        },
+        {
+          receiver: {
+            phone: { contains: searchTerm },
+          },
+        },
+      ],
+    });
+  }
+
+  // 🔥 filter (type, status)
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.entries(filterData).map(([key, value]) => ({
+        [key]: value,
+      })),
+    });
+  }
+
+  const whereConditions =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
   const transactions = await prisma.transaction.findMany({
-    include: {
-      sender: { omit: { password: true } },
-      receiver: { omit: { password: true } },
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
     },
-    orderBy: { createdAt: "desc" },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          phone: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      receiver: {
+        select: {
+          id: true,
+          phone: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
   });
 
-  return transactions;
+  // 🔥 total count (pagination meta)
+  const total = await prisma.transaction.count({
+    where: whereConditions,
+  });
+
+  // 🔥 transform data (Admin doesn't need 'direction')
+  const formatted = transactions.map((trx) => {
+    return {
+      id: trx.id,
+      transactionId: trx.transactionId,
+      amount: trx.amount,
+      fee: trx.fee,
+      type: trx.type,
+      agentCommission: trx.agentCommission,
+      systemCommission: trx.systemCommission,
+      status: trx.status,
+      from: trx.sender,
+      to: trx.receiver,
+      createdAt: trx.createdAt,
+    };
+  });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: formatted,
+  };
 };
 
 export const TransactionServices = {

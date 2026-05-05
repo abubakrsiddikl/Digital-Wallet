@@ -3,11 +3,12 @@ import catchAsync from "../../utils/catchAsync";
 import { UserServices } from "./user.service";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes";
+import pick from "../../utils/pick";
 
 
-// ─── Create User ─────────────────────────────────────────────
+// ─── Create User 
 const createUser = catchAsync(async (req: Request, res: Response) => {
-  console.log(req.body)
+  
   const result = await UserServices.createUser(req.body);
 
   sendResponse(res, {
@@ -18,20 +19,24 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ─── Get All Users ────────────────────────────────────────────
+// ─── Get All Users 
 
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserServices.getAllUsers();
+    // pagination options
+  const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
+   const filters = pick(req.query, ["searchTerm", "status"]);
+  const result = await UserServices.getAllUsers(filters,options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Users fetched successfully",
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
 
-// ─── Get Single User ──────────────────────────────────────────
+// ─── Get Single User 
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.getMyProfile(req.user?.id as string);
 
@@ -43,8 +48,24 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ─── Update User ──────────────────────────────────────────────
 
+const getAllAgents = catchAsync(async (req: Request, res: Response) => {
+    // pagination options
+  const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
+   const filters = pick(req.query, ["searchTerm", "status"]);
+  const result = await UserServices.getAllAgents(filters,options);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Agents fetched successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+
+// ─── Update User 
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const verifiedUserRole = req.user?.role;
 
@@ -77,6 +98,7 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
 export const UserControllers = {
   createUser,
   getAllUsers,
+  getAllAgents,
   getMyProfile,
   updateUser,
   deleteUser,

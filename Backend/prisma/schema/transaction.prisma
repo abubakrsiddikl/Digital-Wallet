@@ -1,4 +1,4 @@
-// transaction.prisma
+
 
 enum TransactionType {
   SEND_MONEY

@@ -1,0 +1,22 @@
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model BalanceRequest {
+  id           String        @id @default(uuid())
+  agentId      String
+  amount       Decimal
+  note         String?
+  status       RequestStatus @default(PENDING)
+  reviewedBy   String?
+  reviewNote   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  agent        User          @relation("AgentRequests", fields: [agentId], references: [id])
+  reviewer     User?         @relation("RequestReviewer", fields: [reviewedBy], references: [id])
+}

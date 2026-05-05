@@ -1,0 +1,23 @@
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model AgentApplication {
+  id           String            @id @default(uuid())
+  userId       String            @unique  // one application per user
+  nidNumber    String
+  businessName String?
+  address      String?
+  note         String?
+  status       ApplicationStatus @default(PENDING)
+  reviewedBy   String?           // admin id who reviewed
+  reviewNote   String?           // admin rejection reason
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user         User              @relation("UserApplication", fields: [userId], references: [id])
+  reviewer     User?             @relation("ApplicationReviewer", fields: [reviewedBy], references: [id])
+}
