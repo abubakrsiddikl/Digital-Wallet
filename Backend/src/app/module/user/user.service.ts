@@ -100,13 +100,11 @@ const getMyProfile = async (id: string) => {
 // get All agents
 const getAllAgents = async (filters: any, options: IOptions) => {
   const { searchTerm, ...filterData } = filters;
-  const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
 
-  const andConditions: any[] = [
-    { role: UserRole.AGENT }
-  ];
+  const andConditions: any[] = [{ role: UserRole.AGENT }];
 
- 
   if (searchTerm) {
     andConditions.push({
       OR: [
@@ -116,7 +114,6 @@ const getAllAgents = async (filters: any, options: IOptions) => {
       ],
     });
   }
-
 
   if (Object.keys(filterData).length > 0) {
     andConditions.push({
@@ -134,8 +131,8 @@ const getAllAgents = async (filters: any, options: IOptions) => {
     take: limit,
     orderBy: { [sortBy]: sortOrder },
     include: {
-        wallet: true
-    }
+      wallet: true,
+    },
   });
 
   const total = await prisma.user.count({ where: whereConditions });
@@ -152,39 +149,61 @@ const updateUser = async (
   userData: Prisma.UserUpdateInput,
   requestedByRole: string,
 ) => {
-  console.log({id,userData})
+  const isUserExist = await prisma.user.findUnique({
+    where: { id },
+    include: { agentApplication: true },
+  });
+
+  if (!isUserExist) {
+    throw new Error("User not found!");
+  }
+
   if (userData.role && requestedByRole !== "ADMIN") {
     throw new Error("Only Admin can update user role");
   }
 
-  if (userData.role === "AGENT") {
-    userData.wallet = {
-      update: {
-        type: "AGENT",
-      },
-    };
+  if (userData.password && typeof userData.password === "string") {
+    userData.password = await bcrypt.hash(userData.password, 12);
   }
+
+  const updatePayload: Prisma.UserUpdateInput = { ...userData };
 
   if (userData.role === "USER") {
-    userData.wallet = {
-      update: {
-        type: "USER",
-      },
+    updatePayload.wallet = {
+      update: { type: "USER" },
     };
+
+    if (isUserExist.agentApplication) {
+      updatePayload.agentApplication = {
+        update: { status: "REJECTED" },
+      };
+    }
+
+    updatePayload.isApproved = false;
   }
 
-  //  if password sent in update request, then hash the password before updating
-  if (userData.password && typeof userData.password === "string") {
-    userData.password = await bcrypt.hash(userData.password, 10);
+  if (userData.role === "AGENT") {
+    updatePayload.wallet = {
+      update: { type: "AGENT" },
+    };
+    updatePayload.isApproved = true;
   }
 
-  const user = await prisma.user.update({
+  const result = await prisma.user.update({
     where: { id },
-    data: userData,
-    omit: { password: true },
+    data: updatePayload,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      isApproved: true,
+      wallet: true,
+    },
   });
 
-  return user;
+  return result;
 };
 
 //  Delete User future work

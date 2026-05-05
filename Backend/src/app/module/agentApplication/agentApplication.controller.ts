@@ -52,6 +52,7 @@ const getAllApplications = catchAsync(async (req: Request, res: Response) => {
 const approveApplication = catchAsync(async (req: Request, res: Response) => {
   const adminId = req.user?.id as string;
   const { id } = req.params;
+
   const { status, reviewNote } = req.body; // status: "APPROVE" | "REJECT"
 
   const result = await AgentApplicationServices.approveApplication(

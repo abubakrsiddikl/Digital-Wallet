@@ -146,6 +146,7 @@ const approveApplication = async (
   status: "APPROVE" | "REJECT",
   reviewNote?: string
 ) => {
+
   // 1. Find application
   const application = await prisma.agentApplication.findUnique({
     where: { id: applicationId },
