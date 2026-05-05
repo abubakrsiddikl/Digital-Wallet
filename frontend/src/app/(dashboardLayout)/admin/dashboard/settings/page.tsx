@@ -1,17 +1,27 @@
-const AdminSettingsPage = () => {
+// import AdminSettingsContent from "@/components/modules/Admin/AdminSetting/AdminSettingsContent";
+
+
+const AdminSettingsPage = async () => {
+  // const data = await getSystemSettings();
+  const data ={
+  "settings": {
+    "minSendAmount": 10,
+    "maxSendAmount": 25000,
+    "minCashOutAmount": 50,
+    "maxCashOutAmount": 30000,
+    "minCashInAmount": 100,
+    "maxCashInAmount": 50000,
+    "appName": "SwiftSend Wallet",
+    "supportEmail": "support@swiftsend.com"
+  }
+};
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Admin Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Manage your admin settings here.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">System Settings</h1>
+        <p className="text-muted-foreground text-sm mt-1">Configure global system preferences.</p>
       </div>
-
-      <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground text-sm">
-        {/* TODO: Add AdminSettingsPage content */}
-        <p>🚧 This page is under construction.</p>
-      </div>
+      {/* <AdminSettingsContent settings={data?.settings} /> */}
     </div>
   );
 };

@@ -62,7 +62,7 @@ const UserDropdown = ({ userInfo }: UserDropdownProps) => {
           <Button
             variant="outline"
             size="icon"
-            className="rounded-full h-9 w-9 border-2 border-primary/20 hover:border-primary/50 transition-colors"
+            className="rounded-full h-9 w-9 border-2 border-primary/20 hover:border-primary/50 transition-colors cursor-pointer"
           >
             <span className="text-sm font-semibold text-primary">
               {userInfo.name.charAt(0).toUpperCase()}
@@ -95,6 +95,15 @@ const UserDropdown = ({ userInfo }: UserDropdownProps) => {
               Dashboard
             </Link>
           </DropdownMenuItem>
+
+           {/* Become a Agent */}
+          <DropdownMenuItem asChild>
+            <Link href="/user/dashboard/apply-agent" className="cursor-pointer">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Apply as Agent
+            </Link>
+          </DropdownMenuItem>
+
 
           {/* Profile */}
           <DropdownMenuItem asChild>

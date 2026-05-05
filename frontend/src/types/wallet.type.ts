@@ -1,9 +1,11 @@
+import { IUser } from "./auth.type";
+
 export interface IWallet {
-  id: string
-  userId: string
-  balance: string
-  isBlocked: boolean
-  type: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  user: Partial<IUser>;
+  balance: string;
+  isBlocked: boolean;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
 }

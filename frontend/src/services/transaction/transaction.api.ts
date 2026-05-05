@@ -52,6 +52,16 @@ export const getMyTransactions = async (
   return res;
 };
 
+// get all transactions of admin
+export const getAllTransactions = async (
+  queryString?: string,
+): Promise<IResponse<ITransaction[]>> => {
+  const res = await apiRequest<ITransaction[]>(
+    `/transaction?${queryString ?? ""}`,
+  );
+  return res;
+};
+
 // cash out to agent : user --> agent
 
 export const cashOutUserToAgent = async (
