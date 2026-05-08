@@ -3,12 +3,15 @@ import AppError from "../../errorHelper/AppError";
 import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 import { prisma } from "../../utils/prisma";
 import httpStatus from "http-status-codes";
+import {
+  emitApplicationStatusChanged,
+  emitBalanceRequestStatus,
+  emitNewAgentApplication,
+  emitNewBalanceRequest,
+} from "../../socket/socketEmitter";
 
 // agent apply
-const applyAsAgent = async (
-  userId: string,
-  payload: AgentApplication
-) => {
+const applyAsAgent = async (userId: string, payload: AgentApplication) => {
   // 1. Check user exists and is USER role
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -20,7 +23,7 @@ const applyAsAgent = async (
   if (user.role !== "USER") {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Only regular users can apply to become an agent"
+      "Only regular users can apply to become an agent",
     );
   }
 
@@ -32,13 +35,13 @@ const applyAsAgent = async (
     if (existing.status === "PENDING") {
       throw new AppError(
         httpStatus.CONFLICT,
-        "You already have a pending application"
+        "You already have a pending application",
       );
     }
     if (existing.status === "APPROVED") {
       throw new AppError(
         httpStatus.CONFLICT,
-        "You are already an approved agent"
+        "You are already an approved agent",
       );
     }
     // REJECTED — allow re-apply by updating
@@ -51,6 +54,14 @@ const applyAsAgent = async (
         reviewNote: null,
       },
     });
+    // ✅ Notify admins about re-application
+    emitNewAgentApplication({
+      applicationId: updated.id,
+      applicantName: user.name,
+      applicantPhone: user.phone,
+      createdAt: updated.createdAt.toISOString(),
+    });
+
     return updated;
   }
 
@@ -62,6 +73,15 @@ const applyAsAgent = async (
     },
   });
 
+  // find
+
+  const socketPayload = {
+    applicationId: application.id,
+    applicantName: user.name,
+    applicantPhone: user.phone,
+    createdAt: application.createdAt.toISOString(),
+  };
+  emitNewAgentApplication(socketPayload);
   return application;
 };
 
@@ -87,7 +107,7 @@ const getMyApplicationStatus = async (userId: string) => {
 // ─── GET all applications by admin
 const getAllApplications = async (
   filters: { status?: string; searchTerm?: string },
-  options: IOptions
+  options: IOptions,
 ) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
@@ -102,14 +122,21 @@ const getAllApplications = async (
     andConditions.push({
       OR: [
         { nidNumber: { contains: filters.searchTerm } },
-        { user: { name: { contains: filters.searchTerm, mode: "insensitive" } } },
+        {
+          user: { name: { contains: filters.searchTerm, mode: "insensitive" } },
+        },
         { user: { phone: { contains: filters.searchTerm } } },
-        { user: { email: { contains: filters.searchTerm, mode: "insensitive" } } },
+        {
+          user: {
+            email: { contains: filters.searchTerm, mode: "insensitive" },
+          },
+        },
       ],
     });
   }
 
-  const whereConditions = andConditions.length > 0 ? { AND: andConditions } : {};
+  const whereConditions =
+    andConditions.length > 0 ? { AND: andConditions } : {};
 
   const [applications, total] = await Promise.all([
     prisma.agentApplication.findMany({
@@ -144,9 +171,8 @@ const approveApplication = async (
   applicationId: string,
   adminId: string,
   status: "APPROVE" | "REJECT",
-  reviewNote?: string
+  reviewNote?: string,
 ) => {
-
   // 1. Find application
   const application = await prisma.agentApplication.findUnique({
     where: { id: applicationId },
@@ -160,7 +186,7 @@ const approveApplication = async (
   if (application.status !== "PENDING") {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      `Application is already ${application.status.toLowerCase()}`
+      `Application is already ${application.status.toLowerCase()}`,
     );
   }
 
@@ -199,13 +225,23 @@ const approveApplication = async (
     return updatedApp;
   });
 
+  // ✅ Notify the applicant about their application status
+  emitApplicationStatusChanged(application.userId, {
+    applicationId: result.id,
+    status: status === "APPROVE" ? "APPROVED" : "REJECTED",
+    message:
+      status === "APPROVE"
+        ? "Congratulations! Your agent application has been approved."
+        : (reviewNote ?? "Your agent application has been rejected."),
+  });
+
   return result;
 };
 
 // ─── POST agent request balance top-up to admin
 const requestBalance = async (
   agentId: string,
-  payload: { amount: number; note?: string }
+  payload: { amount: number; note?: string },
 ) => {
   // 1. Verify agent
   const agent = await prisma.user.findUnique({
@@ -217,7 +253,10 @@ const requestBalance = async (
   }
 
   if (!agent.isApproved) {
-    throw new AppError(httpStatus.FORBIDDEN, "Your agent account is not approved yet");
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your agent account is not approved yet",
+    );
   }
 
   // 2. Check no duplicate PENDING request
@@ -228,13 +267,16 @@ const requestBalance = async (
   if (existingPending) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "You already have a pending balance request. Please wait for admin review."
+      "You already have a pending balance request. Please wait for admin review.",
     );
   }
 
   // 3. Validate amount
   if (payload.amount < 100) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Minimum balance request is ৳100");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Minimum balance request is ৳100",
+    );
   }
 
   const request = await prisma.balanceRequest.create({
@@ -245,13 +287,22 @@ const requestBalance = async (
     },
   });
 
+  // ✅ Notify admins about new balance request
+  emitNewBalanceRequest({
+    requestId: request.id,
+    agentName: agent.name,
+    agentPhone: agent.phone,
+    amount: Number(request.amount),
+    createdAt: request.createdAt.toISOString(),
+  });
+
   return request;
 };
 
 // ─── GET all balance requests by admin
 const getAllBalanceRequests = async (
   filters: { status?: string },
-  options: IOptions
+  options: IOptions,
 ) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
@@ -293,7 +344,7 @@ const approveBalanceRequest = async (
   requestId: string,
   adminId: string,
   status: "APPROVE" | "REJECT",
-  reviewNote?: string
+  reviewNote?: string,
 ) => {
   // 1. Find request
   const request = await prisma.balanceRequest.findUnique({
@@ -310,7 +361,7 @@ const approveBalanceRequest = async (
   if (request.status !== "PENDING") {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      `Request is already ${request.status.toLowerCase()}`
+      `Request is already ${request.status.toLowerCase()}`,
     );
   }
 
@@ -339,6 +390,12 @@ const approveBalanceRequest = async (
     }
 
     return updated;
+  });
+  // ✅ Notify the agent about their balance request status
+  emitBalanceRequestStatus(request.agentId, {
+    requestId: result.id,
+    status: status === "APPROVE" ? "APPROVED" : "REJECTED",
+    amount: status === "APPROVE" ? Number(request.amount) : undefined,
   });
 
   return result;

@@ -6,6 +6,7 @@ import { TransactionType } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import { IOptions, paginationHelper } from "../../helper/paginationHelper";
+import { emitTransactionSuccess } from "../../socket/socketEmitter";
 
 // ─── Fee calculation ──────────────────────────────────────────
 const calculateFee = (amount: Decimal, type: string) => {
@@ -29,7 +30,295 @@ const verifyPin = async (userId: string, pin: string) => {
   }
 };
 
-// ─── Send Money (User → User) 
+// // ─── Send Money (User → User) 
+// const sendMoney = async ({
+//   senderId,
+//   receiverPhone,
+//   amount,
+//   pin,
+// }: {
+//   senderId: string;
+//   receiverPhone: string;
+//   amount: number;
+//   pin: string;
+// }) => {
+//   const decimalAmount = new Decimal(amount);
+
+//   // pin verify
+//   await verifyPin(senderId, pin);
+
+//   // console.log({receiverPhone})
+
+//   const result = await prisma.$transaction(async (tx) => {
+//     // ─── Step 1: Phone  receiver find ──────────────────
+//     const receiver = await tx.user.findUnique({
+//       where: { phone: receiverPhone },
+//     });
+//     // console.log("tx reciver",receiver)
+
+//     if (!receiver) {
+//       throw new AppError(httpStatus.NOT_FOUND, "Receiver not found");
+//     }
+
+//     if (receiver.id === senderId) {
+//       throw new AppError(
+//         httpStatus.BAD_REQUEST,
+//         "You cannot send money to yourself",
+//       );
+//     }
+
+//     // ─── Step 2: Sender wallet check ─────────────────────────
+//     const senderWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId: senderId },
+//     });
+
+//     if (senderWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "Your wallet is blocked");
+//     }
+
+//     const fee = calculateFee(decimalAmount, TransactionType.SEND_MONEY);
+//     const totalDeduction = decimalAmount.add(fee);
+
+//     if (senderWallet.balance.lessThan(totalDeduction)) {
+//       throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
+//     }
+
+//     // ─── Step 3: Receiver wallet check ───────────────────────
+//     const receiverWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId: receiver.id },
+//     });
+
+//     if (receiverWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "Receiver wallet is blocked");
+//     }
+
+//     const transactionId = `TXN-${nanoid(6)}`;
+
+//     // ─── Step 4: Balance update ───────────────────────────────
+//     await tx.wallet.update({
+//       where: { userId: senderId },
+//       data: { balance: { decrement: totalDeduction } },
+//     });
+
+//     await tx.wallet.update({
+//       where: { userId: receiver.id },
+//       data: { balance: { increment: decimalAmount } },
+//     });
+
+//     // system wallet balance increase (fee)
+//     const systemWallet = await tx.wallet.findFirstOrThrow({
+//       where: { type: "SYSTEM" },
+//     });
+
+//     await tx.wallet.update({
+//       where: { id: systemWallet.id },
+//       data: { balance: { increment: fee } },
+//     });
+
+//     // ─── Step 5: Transaction record ───────────────────────────
+//     const transaction = await tx.transaction.create({
+//       data: {
+//         senderId,
+//         receiverId: receiver.id,
+//         amount: decimalAmount,
+//         fee,
+//         agentCommission: 0,
+//         systemCommission: fee,
+//         type: TransactionType.SEND_MONEY,
+//         status: "SUCCESS",
+//         transactionId: transactionId,
+//         initiatedBy: senderId,
+//       },
+//     });
+
+//     return transaction;
+//   });
+
+//   return result;
+// };
+
+// // ─── Cash In (Agent → User) 
+
+// const cashIn = async ({
+//   agentId,
+//   userPhone,
+//   amount,
+//   pin,
+// }: {
+//   agentId: string;
+//   userPhone: string;
+//   amount: number;
+//   pin: string;
+// }) => {
+//   const decimalAmount = new Decimal(amount);
+
+//   // agent pin verify
+//   await verifyPin(agentId, pin);
+
+//   const result = await prisma.$transaction(async (tx) => {
+//     const user = await tx.user.findUnique({
+//       where: { phone: userPhone },
+//     });
+
+//     if (!user) {
+//       throw new AppError(httpStatus.NOT_FOUND, "User not found");
+//     }
+
+//     const agentWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId: agentId },
+//     });
+
+//     if (agentWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "Agent wallet is blocked");
+//     }
+
+//     if (agentWallet.balance.lessThan(decimalAmount)) {
+//       throw new AppError(httpStatus.BAD_REQUEST, "Insufficient agent balance");
+//     }
+
+//     const userWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId: user.id },
+//     });
+
+//     if (userWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "User wallet is blocked");
+//     }
+//     const transactionId = `TXN-${nanoid(6)}`;
+
+//     // agent balance decrease, user balance increase
+//     await tx.wallet.update({
+//       where: { userId: agentId },
+//       data: { balance: { decrement: decimalAmount } },
+//     });
+
+//     await tx.wallet.update({
+//       where: { userId: user.id },
+//       data: { balance: { increment: decimalAmount } },
+//     });
+
+//     const transaction = await tx.transaction.create({
+//       data: {
+//         senderId: agentId,
+//         receiverId: user.id,
+//         amount: decimalAmount,
+//         fee: 0,
+//         agentCommission: 0,
+//         type: TransactionType.CASH_IN,
+//         status: "SUCCESS",
+//         transactionId: transactionId,
+//         initiatedBy: agentId,
+//       },
+//     });
+
+//     return transaction;
+//   });
+
+//   return result;
+// };
+
+// // ─── Cash Out (User → Agent) 
+
+// const cashOut = async ({
+//   userId,
+//   agentPhone,
+//   amount,
+//   pin,
+// }: {
+//   userId: string;
+//   agentPhone: string;
+//   amount: number;
+//   pin: string;
+// }) => {
+//   const decimalAmount = new Decimal(amount);
+
+//   // user pin verify
+//   await verifyPin(userId, pin);
+
+//   const result = await prisma.$transaction(async (tx) => {
+//     const agent = await tx.user.findUnique({
+//       where: { phone: agentPhone },
+//     });
+
+//     if (!agent) {
+//       throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+//     }
+
+//     if (agent.role !== "AGENT") {
+//       throw new AppError(httpStatus.BAD_REQUEST, "This user is not an agent");
+//     }
+
+//     const userWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId },
+//     });
+
+//     if (userWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "Your wallet is blocked");
+//     }
+
+//     const fee = calculateFee(decimalAmount, TransactionType.CASH_OUT);
+//     const agentCommission = calculateAgentCommission(fee);
+//     const systemCommission = fee.sub(agentCommission);
+//     const totalDeduction = decimalAmount.add(fee);
+
+//     if (userWallet.balance.lessThan(totalDeduction)) {
+//       throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
+//     }
+
+//     const agentWallet = await tx.wallet.findUniqueOrThrow({
+//       where: { userId: agent.id },
+//     });
+
+//     if (agentWallet.isBlocked) {
+//       throw new AppError(httpStatus.FORBIDDEN, "Agent wallet is blocked");
+//     }
+
+//     const systemWallet = await tx.wallet.findFirstOrThrow({
+//       where: { id: "SYSTEM_WALLET", type: "SYSTEM" },
+//     });
+
+//     const transactionId = `TXN-${nanoid(6)}`;
+
+//     // user balance decrease,
+//     await tx.wallet.update({
+//       where: { userId },
+//       data: { balance: { decrement: totalDeduction } },
+//     });
+
+//     // agent balance increase
+//     await tx.wallet.update({
+//       where: { userId: agent.id },
+//       data: { balance: { increment: decimalAmount.add(agentCommission) } },
+//     });
+
+//     // system wallet balance increase
+//     await tx.wallet.update({
+//       where: { id: systemWallet.id, type: "SYSTEM" },
+//       data: { balance: { increment: systemCommission } },
+//     });
+
+//     const transaction = await tx.transaction.create({
+//       data: {
+//         senderId: userId,
+//         receiverId: agent.id,
+//         amount: decimalAmount,
+//         fee,
+//         agentCommission,
+//         systemCommission,
+//         type: TransactionType.CASH_OUT,
+//         status: "SUCCESS",
+//         transactionId: transactionId,
+//         initiatedBy: userId,
+//       },
+//     });
+
+//     return transaction;
+//   });
+
+//   return result;
+// };
+
+
+// new socket implementation for transaction
 const sendMoney = async ({
   senderId,
   receiverPhone,
@@ -42,58 +331,29 @@ const sendMoney = async ({
   pin: string;
 }) => {
   const decimalAmount = new Decimal(amount);
-
-  // pin verify
   await verifyPin(senderId, pin);
 
-  // console.log({receiverPhone})
-
   const result = await prisma.$transaction(async (tx) => {
-    // ─── Step 1: Phone  receiver find ──────────────────
     const receiver = await tx.user.findUnique({
       where: { phone: receiverPhone },
     });
-    // console.log("tx reciver",receiver)
 
-    if (!receiver) {
-      throw new AppError(httpStatus.NOT_FOUND, "Receiver not found");
-    }
+    if (!receiver) throw new AppError(httpStatus.NOT_FOUND, "Receiver not found");
+    if (receiver.id === senderId) throw new AppError(httpStatus.BAD_REQUEST, "Self transfer not allowed");
 
-    if (receiver.id === senderId) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "You cannot send money to yourself",
-      );
-    }
-
-    // ─── Step 2: Sender wallet check ─────────────────────────
-    const senderWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId: senderId },
-    });
-
-    if (senderWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "Your wallet is blocked");
-    }
+    const senderWallet = await tx.wallet.findUniqueOrThrow({ where: { userId: senderId } });
+    if (senderWallet.isBlocked) throw new AppError(httpStatus.FORBIDDEN, "Your wallet is blocked");
 
     const fee = calculateFee(decimalAmount, TransactionType.SEND_MONEY);
     const totalDeduction = decimalAmount.add(fee);
 
-    if (senderWallet.balance.lessThan(totalDeduction)) {
-      throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
-    }
+    if (senderWallet.balance.lessThan(totalDeduction)) throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
 
-    // ─── Step 3: Receiver wallet check ───────────────────────
-    const receiverWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId: receiver.id },
-    });
-
-    if (receiverWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "Receiver wallet is blocked");
-    }
+    const receiverWallet = await tx.wallet.findUniqueOrThrow({ where: { userId: receiver.id } });
+    if (receiverWallet.isBlocked) throw new AppError(httpStatus.FORBIDDEN, "Receiver wallet is blocked");
 
     const transactionId = `TXN-${nanoid(6)}`;
 
-    // ─── Step 4: Balance update ───────────────────────────────
     await tx.wallet.update({
       where: { userId: senderId },
       data: { balance: { decrement: totalDeduction } },
@@ -104,18 +364,13 @@ const sendMoney = async ({
       data: { balance: { increment: decimalAmount } },
     });
 
-    // system wallet balance increase (fee)
-    const systemWallet = await tx.wallet.findFirstOrThrow({
-      where: { type: "SYSTEM" },
-    });
-
+    const systemWallet = await tx.wallet.findFirstOrThrow({ where: { type: "SYSTEM" } });
     await tx.wallet.update({
       where: { id: systemWallet.id },
       data: { balance: { increment: fee } },
     });
 
-    // ─── Step 5: Transaction record ───────────────────────────
-    const transaction = await tx.transaction.create({
+    return await tx.transaction.create({
       data: {
         senderId,
         receiverId: receiver.id,
@@ -125,19 +380,19 @@ const sendMoney = async ({
         systemCommission: fee,
         type: TransactionType.SEND_MONEY,
         status: "SUCCESS",
-        transactionId: transactionId,
+        transactionId,
         initiatedBy: senderId,
       },
     });
-
-    return transaction;
   });
+
+  // Socket Emit: 
+  await emitTransactionSuccess(result.id);
 
   return result;
 };
 
 // ─── Cash In (Agent → User) 
-
 const cashIn = async ({
   agentId,
   userPhone,
@@ -150,41 +405,22 @@ const cashIn = async ({
   pin: string;
 }) => {
   const decimalAmount = new Decimal(amount);
-
-  // agent pin verify
   await verifyPin(agentId, pin);
 
   const result = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({
-      where: { phone: userPhone },
-    });
+    const user = await tx.user.findUnique({ where: { phone: userPhone } });
+    if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
-    if (!user) {
-      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    const agentWallet = await tx.wallet.findUniqueOrThrow({ where: { userId: agentId } });
+    if (agentWallet.isBlocked || agentWallet.balance.lessThan(decimalAmount)) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Invalid agent status or insufficient balance");
     }
 
-    const agentWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId: agentId },
-    });
+    const userWallet = await tx.wallet.findUniqueOrThrow({ where: { userId: user.id } });
+    if (userWallet.isBlocked) throw new AppError(httpStatus.FORBIDDEN, "User wallet is blocked");
 
-    if (agentWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "Agent wallet is blocked");
-    }
-
-    if (agentWallet.balance.lessThan(decimalAmount)) {
-      throw new AppError(httpStatus.BAD_REQUEST, "Insufficient agent balance");
-    }
-
-    const userWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId: user.id },
-    });
-
-    if (userWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "User wallet is blocked");
-    }
     const transactionId = `TXN-${nanoid(6)}`;
 
-    // agent balance decrease, user balance increase
     await tx.wallet.update({
       where: { userId: agentId },
       data: { balance: { decrement: decimalAmount } },
@@ -195,7 +431,7 @@ const cashIn = async ({
       data: { balance: { increment: decimalAmount } },
     });
 
-    const transaction = await tx.transaction.create({
+    return await tx.transaction.create({
       data: {
         senderId: agentId,
         receiverId: user.id,
@@ -204,19 +440,19 @@ const cashIn = async ({
         agentCommission: 0,
         type: TransactionType.CASH_IN,
         status: "SUCCESS",
-        transactionId: transactionId,
+        transactionId,
         initiatedBy: agentId,
       },
     });
-
-    return transaction;
   });
+
+  //  Socket Emit: Cash In 
+  await emitTransactionSuccess(result.id);
 
   return result;
 };
 
 // ─── Cash Out (User → Agent) 
-
 const cashOut = async ({
   userId,
   agentPhone,
@@ -229,73 +465,41 @@ const cashOut = async ({
   pin: string;
 }) => {
   const decimalAmount = new Decimal(amount);
-
-  // user pin verify
   await verifyPin(userId, pin);
 
   const result = await prisma.$transaction(async (tx) => {
-    const agent = await tx.user.findUnique({
-      where: { phone: agentPhone },
-    });
+    const agent = await tx.user.findUnique({ where: { phone: agentPhone } });
+    if (!agent || agent.role !== "AGENT") throw new AppError(httpStatus.NOT_FOUND, "Valid agent not found");
 
-    if (!agent) {
-      throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
-    }
-
-    if (agent.role !== "AGENT") {
-      throw new AppError(httpStatus.BAD_REQUEST, "This user is not an agent");
-    }
-
-    const userWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId },
-    });
-
-    if (userWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "Your wallet is blocked");
-    }
-
+    const userWallet = await tx.wallet.findUniqueOrThrow({ where: { userId } });
     const fee = calculateFee(decimalAmount, TransactionType.CASH_OUT);
-    const agentCommission = calculateAgentCommission(fee);
-    const systemCommission = fee.sub(agentCommission);
     const totalDeduction = decimalAmount.add(fee);
 
-    if (userWallet.balance.lessThan(totalDeduction)) {
-      throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
+    if (userWallet.isBlocked || userWallet.balance.lessThan(totalDeduction)) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance or blocked wallet");
     }
 
-    const agentWallet = await tx.wallet.findUniqueOrThrow({
-      where: { userId: agent.id },
-    });
-
-    if (agentWallet.isBlocked) {
-      throw new AppError(httpStatus.FORBIDDEN, "Agent wallet is blocked");
-    }
-
-    const systemWallet = await tx.wallet.findFirstOrThrow({
-      where: { id: "SYSTEM_WALLET", type: "SYSTEM" },
-    });
-
+    const agentCommission = calculateAgentCommission(fee);
+    const systemCommission = fee.sub(agentCommission);
     const transactionId = `TXN-${nanoid(6)}`;
+    const systemWallet = await tx.wallet.findFirstOrThrow({ where: { type: "SYSTEM" } });
 
-    // user balance decrease,
     await tx.wallet.update({
       where: { userId },
       data: { balance: { decrement: totalDeduction } },
     });
 
-    // agent balance increase
     await tx.wallet.update({
       where: { userId: agent.id },
       data: { balance: { increment: decimalAmount.add(agentCommission) } },
     });
 
-    // system wallet balance increase
     await tx.wallet.update({
-      where: { id: systemWallet.id, type: "SYSTEM" },
+      where: { id: systemWallet.id },
       data: { balance: { increment: systemCommission } },
     });
 
-    const transaction = await tx.transaction.create({
+    return await tx.transaction.create({
       data: {
         senderId: userId,
         receiverId: agent.id,
@@ -305,13 +509,14 @@ const cashOut = async ({
         systemCommission,
         type: TransactionType.CASH_OUT,
         status: "SUCCESS",
-        transactionId: transactionId,
+        transactionId,
         initiatedBy: userId,
       },
     });
-
-    return transaction;
   });
+
+  //  Socket Emit: Cash Out 
+  await emitTransactionSuccess(result.id);
 
   return result;
 };

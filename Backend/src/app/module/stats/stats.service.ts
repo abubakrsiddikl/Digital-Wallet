@@ -8,22 +8,23 @@ const getAgentStats = async (userId: string) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
+ 
   const [cashInAgg, cashOutAgg, todayCommAgg, totalCommAgg, txCount, recent] =
     await Promise.all([
-      // Total cash in amount (agent is receiver)
+      // Total cash in amount (agent is sender)
       prisma.transaction.aggregate({
         where: {
-          receiverId: userId,
+          senderId: userId,
           type: "CASH_IN",
           status: "SUCCESS",
         },
         _sum: { amount: true },
       }),
 
-      // Total cash out amount (agent is sender)
+      // Total cash out amount (agent is receiver)
       prisma.transaction.aggregate({
         where: {
-          senderId: userId,
+          receiverId: userId,
           type: "CASH_OUT",
           status: "SUCCESS",
         },
@@ -100,6 +101,7 @@ const getAgentStats = async (userId: string) => {
         },
       }),
     ]);
+
 
   // Shape recent transactions to match ITransaction interface
   const recentTransactions = recent.map((tx) => {
@@ -293,10 +295,12 @@ const getSystemStats = async () => {
   }));
 
   return {
-   totalSystemBalance: Number(totalSystemBalance.toFixed(2)),
-  totalUserBalance: Number(totalUserBalance.toFixed(2)),
-  totalAgentBalance: Number(totalAgentBalance.toFixed(2)),
-  totalCommissionEarned: Number((transactionAgg._sum.systemCommission ?? 0).toFixed(2)),
+    totalSystemBalance: Number(totalSystemBalance.toFixed(2)),
+    totalUserBalance: Number(totalUserBalance.toFixed(2)),
+    totalAgentBalance: Number(totalAgentBalance.toFixed(2)),
+    totalCommissionEarned: Number(
+      (transactionAgg._sum.systemCommission ?? 0).toFixed(2),
+    ),
     wallets: formattedWallets,
   };
 };
