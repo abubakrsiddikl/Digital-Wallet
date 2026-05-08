@@ -3,61 +3,68 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
-import { Bell, Menu, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardMobileSidebar from "./DashboardMobileSidebar";
 import UserDropdown from "./UserDropdown";
+import NotificationBell from "@/components/shared/NotificationBell"; // 
 import { IUser } from "@/types/auth.type";
 import { NavSection } from "@/types/dashboard.type";
-
+import { getUserProfile } from "@/services/auth/auth.api";
+import { useRealtimeWallet } from "@/hooks/useRealtimeData";
 
 interface DashboardNavbarContentProps {
-  userInfo: IUser;
+  initialUserInfo: IUser;
   navItems?: NavSection[];
   dashboardHome?: string;
 }
+
 const DashboardNavbarContent = ({
-  userInfo,
+ initialUserInfo ,
   navItems,
   dashboardHome,
 }: DashboardNavbarContentProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const checkSmallerScreen = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+  const fetchFn = useCallback(
+    () => getUserProfile(),
+    [], //  queryString change → new fetchFn → refetch
+  );
 
+  const { data: userInfo } = useRealtimeWallet({
+    fetchFn,
+    initialData: initialUserInfo,
+  });
+  // console.log("user info",userInfo,initialUserInfo)
+
+  useEffect(() => {
+    const checkSmallerScreen = () => setIsMobile(window.innerWidth < 768);
     checkSmallerScreen();
     window.addEventListener("resize", checkSmallerScreen);
-
-    return () => {
-      window.removeEventListener("resize", checkSmallerScreen);
-    };
+    return () => window.removeEventListener("resize", checkSmallerScreen);
   }, []);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
-        {/* Mobile Menu Toggle */}
+        {/* Mobile Menu */}
         <Sheet open={isMobile && isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="outline" size="icon">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          {/* Hide the overlay on medium and larger screens */}
           <SheetContent side="left" className="w-64 p-0">
             <DashboardMobileSidebar
-              userInfo={userInfo}
+              userInfo={userInfo as IUser}
               navItems={navItems || []}
               dashboardHome={dashboardHome || ""}
             />
           </SheetContent>
         </Sheet>
 
-        {/* Search Bar */}
+        {/* Search */}
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -65,16 +72,13 @@ const DashboardNavbarContent = ({
           </div>
         </div>
 
-        {/* Right Side Actions */}
+        {/* Right Side */}
         <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <Button variant="outline" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
-          </Button>
+          <p> ৳ {Number(userInfo?.wallet?.balance).toFixed(2)}</p>
+          {/* NotificationBell */}
+          <NotificationBell />
 
-          {/* User Dropdown */}
-          <UserDropdown userInfo={userInfo} />
+          <UserDropdown userInfo={userInfo as IUser} />
         </div>
       </div>
     </header>

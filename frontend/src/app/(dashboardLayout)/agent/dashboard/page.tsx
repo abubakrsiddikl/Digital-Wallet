@@ -8,7 +8,14 @@ const AgentDashboardPage = async () => {
     getAgentDashboardStats(),
   ]);
 
-  return <AgentDashboardContent user={user} stats={stats.data || {}} />;
+  console.log(stats)
+
+  return (
+    <AgentDashboardContent
+      initialUserInfo={user}
+      initialStats={stats || {}}
+    />
+  );
 };
 
 export default AgentDashboardPage;

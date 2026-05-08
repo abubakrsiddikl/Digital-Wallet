@@ -509,3 +509,6 @@ const AdminApplicationsContent = ({
 };
 
 export default AdminApplicationsContent;
+
+
+

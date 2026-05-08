@@ -228,6 +228,7 @@ const AdminUsersContent = ({ users, meta }: AdminUsersContentProps) => {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("searchTerm") ?? "");
 
+
   const activeStatus = searchParams.get("status") ?? "All";
   const currentPage = Number(searchParams.get("page") ?? 1);
 

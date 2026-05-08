@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   Eye,
@@ -21,9 +21,15 @@ import { IUser } from "@/types/auth.type";
 import { IAgentStats } from "@/types/stats.type";
 import { ITransaction } from "@/types/transaction.type";
 
+import { IResponse } from "@/types";
+
+import { getAgentDashboardStats } from "@/services/stats/stats.api";
+import { getUserProfile } from "@/services/auth/auth.api";
+import { useRealtimeWallet } from "@/hooks/useRealtimeData";
+
 interface AgentDashboardContentProps {
-  user: IUser;
-  stats?: IAgentStats;
+  initialUserInfo: IUser;
+  initialStats?: IResponse<IAgentStats>;
 }
 
 // ─── Quick actions ─────────────────────────────────────────────
@@ -80,9 +86,7 @@ const AgentBalanceCard = ({ user }: { user: IUser }) => {
             </p>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold tracking-tight">
-                {show
-                  ? `৳ ${Number(balance).toLocaleString("en-BD")}`
-                  : "৳ ••••••"}
+                {show ? `৳ ${Number(balance).toFixed(2)}` : "৳ ••••••"}
               </span>
               <button
                 onClick={() => setShow(!show)}
@@ -206,7 +210,9 @@ const RecentTransactions = ({
           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
             <Wallet className="h-5 w-5 text-muted-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground">No recent transactions</p>
+          <p className="text-sm text-muted-foreground">
+            No recent transactions
+          </p>
         </div>
       ) : (
         <div className="space-y-1">
@@ -216,7 +222,8 @@ const RecentTransactions = ({
             // counterparty: cash in → who sent (from), cash out → who received (to)
             const counterparty = isCashIn ? tx.from : tx.to;
             const displayName = counterparty?.name ?? "—";
-            const displayPhone = counterparty?.phone ?? counterparty?.email ?? "—";
+            const displayPhone =
+              counterparty?.phone ?? counterparty?.email ?? "—";
 
             const amount = Number(tx.amount);
             const commission = Number(tx.agentCommission);
@@ -285,41 +292,64 @@ const RecentTransactions = ({
 );
 
 // ─── Main ──────────────────────────────────────────────────────
-const AgentDashboardContent = ({ user, stats }: AgentDashboardContentProps) => (
-  <div className="space-y-5 max-w-2xl mx-auto md:max-w-none">
-    <AgentBalanceCard user={user} />
+const AgentDashboardContent = ({
+  initialUserInfo,
+  initialStats,
+}: AgentDashboardContentProps) => {
+  const fetchFn = useCallback(
+    () => getUserProfile(),
+    [], //  queryString change → new fetchFn → refetch
+  );
+  const realTimeStats = useCallback(
+    () => getAgentDashboardStats(),
+    [], //  queryString change → new fetchFn → refetch
+  );
 
-    {/* Quick actions */}
-    <div className="grid grid-cols-4 gap-3">
-      {QUICK_ACTIONS.map((action) => {
-        const Icon = action.icon;
-        return (
-          <Link
-            key={action.href}
-            href={action.href}
-            className={`flex flex-col items-center gap-2.5 rounded-2xl border p-3 md:p-4 transition-all hover:scale-105 hover:shadow-md active:scale-95 ${action.border}`}
-          >
-            <div
-              className={`h-11 w-11 rounded-xl flex items-center justify-center ${action.color}`}
+  const { data: stats } = useRealtimeWallet({
+    fetchFn: realTimeStats,
+    initialData: initialStats,
+  });
+
+  const { data: user } = useRealtimeWallet({
+    fetchFn,
+    initialData: initialUserInfo,
+  });
+  return (
+    <div className="space-y-5 max-w-2xl mx-auto md:max-w-none">
+      <AgentBalanceCard user={user as IUser} />
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-4 gap-3">
+        {QUICK_ACTIONS.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link
+              key={action.href}
+              href={action.href}
+              className={`flex flex-col items-center gap-2.5 rounded-2xl border p-3 md:p-4 transition-all hover:scale-105 hover:shadow-md active:scale-95 ${action.border}`}
             >
-              <Icon className="h-5 w-5" />
-            </div>
-            <span className="text-xs font-medium text-center leading-tight text-foreground">
-              {action.label}
-            </span>
-          </Link>
-        );
-      })}
-    </div>
+              <div
+                className={`h-11 w-11 rounded-xl flex items-center justify-center ${action.color}`}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-center leading-tight text-foreground">
+                {action.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
 
-    {/* Stats & recent transactions — shown only when stats is available */}
-    {stats && (
-      <>
-        <StatsRow stats={stats} />
-        <RecentTransactions transactions={stats.recentTransactions} />
-      </>
-    )}
-  </div>
-);
+      {/* Stats & recent transactions — shown only when stats is available */}
+      {stats && (
+        <>
+          <StatsRow stats={stats?.data} />
+          <RecentTransactions transactions={stats?.data?.recentTransactions} />
+        </>
+      )}
+    </div>
+  );
+};
 
 export default AgentDashboardContent;

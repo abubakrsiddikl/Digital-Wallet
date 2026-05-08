@@ -13,7 +13,7 @@ const DashboardNavbar = async () => {
 
   return (
     <DashboardNavbarContent
-      userInfo={userInfo}
+      initialUserInfo={userInfo}
       navItems={navItems}
       dashboardHome={dashboardHome}
     />

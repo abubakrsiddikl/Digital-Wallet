@@ -22,7 +22,8 @@ const AdminTransactionsPage = async ({
           System-wide transaction history with full details.
         </p>
       </div>
-      <AdminTransactionsContent transactions={data?.data ?? []} />
+      <AdminTransactionsContent initialResponse={data} />
+     
     </div>
   );
 };
