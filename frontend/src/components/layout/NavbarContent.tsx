@@ -11,9 +11,9 @@ import { logoutUser } from "@/services/auth/auth.api";
 // ─── Nav menu config ──────────────────────────────────────────
 const PUBLIC_NAV = [
   { label: "Home", path: "/" },
-  { label: "Features", path: "/#features" },
-  { label: "Pricing", path: "/#pricing" },
-  { label: "About", path: "/#about" },
+  { label: "Features", path: "/features" },
+  { label: "About", path: "/about" },
+  { label: "Contact", path: "/contact" },
 ];
 
 // ─── Icons ────────────────────────────────────────────────────
@@ -280,7 +280,9 @@ export default function NavbarContent({ user }: { user: IUser | null }) {
               {/* {typeof user?.wallet?.balance === "number" && (
                 <BalancePill balance={user.wallet.balance} />
               )} */}
-              <BalancePill balance={parseInt(user?.wallet?.balance as string)} />
+              <BalancePill
+                balance={parseInt(user?.wallet?.balance as string)}
+              />
 
               {/* ② Dashboard button — this navigates */}
               <Link

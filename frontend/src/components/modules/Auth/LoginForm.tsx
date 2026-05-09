@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { loginUser } from "@/services/auth/auth.api";
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -117,12 +118,12 @@ const LoginForm = ({ redirect }: { redirect?: string }) => {
 
         {/* Forgot password */}
         <div className="flex justify-end -mt-1">
-          <a
+          <Link
             href="/forget-password"
             className="text-xs text-emerald-600 hover:underline font-medium"
           >
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         {/* Submit */}
