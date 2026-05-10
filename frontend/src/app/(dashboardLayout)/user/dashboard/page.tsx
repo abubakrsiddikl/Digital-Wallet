@@ -7,7 +7,10 @@ const UserDashboardPage = async () => {
   const transactions = await getMyTransactions("limit=4");
 
   return (
-    <UserDashboardContent user={user} transactions={transactions.data || []} />
+    <UserDashboardContent
+      initialUserInfo={user}
+      initialTransactions={transactions}
+    />
   );
 };
 

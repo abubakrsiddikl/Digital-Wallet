@@ -81,6 +81,17 @@ export const userNavItems: NavSection[] = [
       },
     ],
   },
+  {
+    title: "Account Action",
+    items: [
+      {
+        title: "Become an Agent",
+        href: "/user/dashboard/apply-agent",
+        icon: "UserPlus", 
+        roles: ["USER"],
+      },
+    ],
+  },
 ];
 
 // ─── Agent nav ───────────────────────────────────────────────

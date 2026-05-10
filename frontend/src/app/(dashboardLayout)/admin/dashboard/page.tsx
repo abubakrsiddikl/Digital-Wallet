@@ -8,7 +8,9 @@ const AdminDashboardPage = async () => {
     getAdminDashboardStats(),
   ]);
 
-  return <AdminDashboardContent stats={adminStats?.data || []} user={user} />;
+  return (
+    <AdminDashboardContent initialStats={adminStats} initialUserInfo={user} />
+  );
 };
 
 export default AdminDashboardPage;

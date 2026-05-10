@@ -122,7 +122,7 @@ export default function AboutPage() {
             About
             <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
               {" "}
-              SwiftPay
+              Takaa
             </span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">

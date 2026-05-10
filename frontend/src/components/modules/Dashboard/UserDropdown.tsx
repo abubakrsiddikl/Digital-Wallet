@@ -96,15 +96,6 @@ const UserDropdown = ({ userInfo }: UserDropdownProps) => {
             </Link>
           </DropdownMenuItem>
 
-           {/* Become a Agent */}
-          <DropdownMenuItem asChild>
-            <Link href="/user/dashboard/apply-agent" className="cursor-pointer">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Apply as Agent
-            </Link>
-          </DropdownMenuItem>
-
-
           {/* Profile */}
           <DropdownMenuItem asChild>
             <Link href="/my-profile" className="cursor-pointer">

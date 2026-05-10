@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { IUser } from "@/types/auth.type";
 import { format } from "date-fns";
@@ -20,10 +20,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ITransaction } from "@/types/transaction.type";
+import { getUserProfile } from "@/services/auth/auth.api";
+import { useRealtimeTransactions, useRealtimeWallet } from "@/hooks/useRealtimeData";
+import { getMyTransactions } from "@/services/transaction/transaction.api";
+import { IResponse } from "@/types";
 
 interface UserDashboardClientProps {
-  user: IUser;
-  transactions?: ITransaction[]; // Optional, can be fetched separately
+  initialUserInfo: IUser;
+  initialTransactions?: IResponse<ITransaction[]>; // Optional, can be fetched separately
 }
 
 // ─── Quick action config ──────────────────────────────────────
@@ -61,42 +65,6 @@ const QUICK_ACTIONS = [
   },
 ];
 
-// ─── Mock recent transactions (replace with real data) ────────
-const MOCK_TRANSACTIONS = [
-  {
-    id: 1,
-    type: "sent",
-    label: "Sent to Rahim",
-    amount: -500,
-    time: "2 min ago",
-    phone: "01711...",
-  },
-  {
-    id: 2,
-    type: "received",
-    label: "Received from Karim",
-    amount: 1200,
-    time: "1 hour ago",
-    phone: "01833...",
-  },
-  {
-    id: 3,
-    type: "cashout",
-    label: "Cash Out",
-    amount: -2000,
-    time: "Yesterday",
-    phone: "Agent",
-  },
-  {
-    id: 4,
-    type: "received",
-    label: "Add Money",
-    amount: 5000,
-    time: "2 days ago",
-    phone: "Bank",
-  },
-];
-
 // ─── Balance Card ─────────────────────────────────────────────
 const BalanceCard = ({ user }: { user: IUser }) => {
   const [showBalance, setShowBalance] = useState(false);
@@ -118,9 +86,7 @@ const BalanceCard = ({ user }: { user: IUser }) => {
             </p>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold tracking-tight">
-                {showBalance
-                  ? `৳ ${balance.toLocaleString("en-BD")}`
-                  : "৳ ••••••"}
+                {showBalance ? `৳ ${Number(balance).toFixed(2)}` : "৳ ••••••"}
               </span>
               <button
                 onClick={() => setShowBalance(!showBalance)}
@@ -285,13 +251,36 @@ const RecentTransactions = ({
 
 // ─── Main Dashboard ───────────────────────────────────────────
 const UserDashboardContent = ({
-  user,
-  transactions,
+  initialUserInfo,
+  initialTransactions,
 }: UserDashboardClientProps) => {
+  // fetch user and wallet realtime data 
+  const fetchFn = useCallback(
+    () => getUserProfile(),
+    [], //  queryString change → new fetchFn → refetch
+  );
+
+
+  // user fetch realtime transaction
+   const realTimeTransaction = useCallback(
+      () => getMyTransactions("limit=4"),
+      [], //  queryString change → new fetchFn → refetch
+    );
+  const {data: transactionsData} = useRealtimeTransactions({
+    fetchFn: realTimeTransaction,
+    initialData: initialTransactions
+  });
+
+
+  const { data: user } = useRealtimeWallet({
+    fetchFn,
+    initialData: initialUserInfo,
+  });
+  const transactions = transactionsData?.data;
   return (
     <div className="space-y-5 max-w-2xl mx-auto md:max-w-none">
       {/* Balance Card */}
-      <BalanceCard user={user} />
+      <BalanceCard user={user as IUser} />
 
       {/* Quick Actions */}
       <QuickActions />
