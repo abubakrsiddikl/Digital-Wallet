@@ -319,7 +319,7 @@ const AgentDashboardContent = ({
       <AgentBalanceCard user={user as IUser} />
 
       {/* Quick actions */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {QUICK_ACTIONS.map((action) => {
           const Icon = action.icon;
           return (

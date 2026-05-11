@@ -21,7 +21,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ITransaction } from "@/types/transaction.type";
 import { getUserProfile } from "@/services/auth/auth.api";
-import { useRealtimeTransactions, useRealtimeWallet } from "@/hooks/useRealtimeData";
+import {
+  useRealtimeTransactions,
+  useRealtimeWallet,
+} from "@/hooks/useRealtimeData";
 import { getMyTransactions } from "@/services/transaction/transaction.api";
 import { IResponse } from "@/types";
 
@@ -129,7 +132,7 @@ const QuickActions = () => (
     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
       Quick Actions
     </h2>
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {QUICK_ACTIONS.map((action) => {
         const Icon = action.icon;
         return (
@@ -254,23 +257,21 @@ const UserDashboardContent = ({
   initialUserInfo,
   initialTransactions,
 }: UserDashboardClientProps) => {
-  // fetch user and wallet realtime data 
+  // fetch user and wallet realtime data
   const fetchFn = useCallback(
     () => getUserProfile(),
     [], //  queryString change → new fetchFn → refetch
   );
 
-
   // user fetch realtime transaction
-   const realTimeTransaction = useCallback(
-      () => getMyTransactions("limit=4"),
-      [], //  queryString change → new fetchFn → refetch
-    );
-  const {data: transactionsData} = useRealtimeTransactions({
+  const realTimeTransaction = useCallback(
+    () => getMyTransactions("limit=4"),
+    [], //  queryString change → new fetchFn → refetch
+  );
+  const { data: transactionsData } = useRealtimeTransactions({
     fetchFn: realTimeTransaction,
-    initialData: initialTransactions
+    initialData: initialTransactions,
   });
-
 
   const { data: user } = useRealtimeWallet({
     fetchFn,

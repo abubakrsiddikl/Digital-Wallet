@@ -1,4 +1,5 @@
 "use client";
+
 import InputFieldError from "@/components/shared/InputFieldError";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,44 @@ import { loginUser } from "@/services/auth/auth.api";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Users,
+  User,
+  Briefcase,
+  ShieldCheck,
+} from "lucide-react";
+
+// ─── Demo Accounts ────────────────────────────────────────────
+const demoAccounts = [
+  {
+    label: "User 1",
+    email: "user1@gmail.com",
+    pass: "12345",
+    icon: <Users size={16} />,
+    color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+  },
+  {
+    label: "User 2",
+    email: "user2@gmail.com",
+    pass: "12345",
+    icon: <User size={16} />,
+    color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
+  },
+  {
+    label: "Agent",
+    email: "agent@gmail.com",
+    pass: "12345",
+    icon: <Briefcase size={16} />,
+    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+  },
+  {
+    label: "Admin",
+    email: "admin@gmail.com",
+    pass: "12345",
+    icon: <ShieldCheck size={16} />,
+    color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+  },
+];
 
 // ─── Icons ────────────────────────────────────────────────────
 const MailIcon = () => (
@@ -51,16 +90,18 @@ const LoginIcon = () => (
   </svg>
 );
 
-
-
 // ─── Login Form ───────────────────────────────────────────────
 const LoginForm = ({ redirect }: { redirect?: string }) => {
   const [state, formAction, isPending] = useActionState(loginUser, null);
+
   const [showPassword, setShowPassword] = useState(false);
+
+  // ✅ controlled inputs
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (state && !state.success && state.message) {
-      console.log("Err",state.message)
       toast.error(state.message);
     }
   }, [state]);
@@ -70,51 +111,83 @@ const LoginForm = ({ redirect }: { redirect?: string }) => {
       {redirect && <input type="hidden" name="redirect" value={redirect} />}
 
       <FieldGroup>
-        <div className="grid grid-cols-1 gap-4">
+        {/* ─── Demo Accounts ───────────────────── */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            Quick Demo Login
+          </p>
 
-          {/* Email */}
-          <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                <MailIcon />
-              </span>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="karim@example.com"
-                className="pl-10"
-              />
-            </div>
-            <InputFieldError field="email" state={state} />
-          </Field>
-
-          {/* Password */}
-          <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                <LockIcon />
-              </span>
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                className="pl-10 pr-10"
-              />
+          <div className="grid grid-cols-2 gap-2">
+            {demoAccounts.map((acc) => (
               <button
+                key={acc.label}
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword(acc.pass);
+                }}
+                className={`flex items-center gap-2 cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium transition-all hover:scale-[1.02] ${acc.color}`}
               >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                {acc.icon}
+                {acc.label}
               </button>
-            </div>
-            <InputFieldError field="password" state={state} />
-          </Field>
+            ))}
+          </div>
         </div>
+
+        {/* Email */}
+        <Field>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+              <MailIcon />
+            </span>
+
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="karim@example.com"
+              className="pl-10"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <InputFieldError field="email" state={state} />
+        </Field>
+
+        {/* Password */}
+        <Field>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+              <LockIcon />
+            </span>
+
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              className="pl-10 pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+
+          <InputFieldError field="password" state={state} />
+        </Field>
 
         {/* Forgot password */}
         <div className="flex justify-end -mt-1">
@@ -143,12 +216,15 @@ const LoginForm = ({ redirect }: { redirect?: string }) => {
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* Sign up link */}
+        {/* Sign up */}
         <FieldDescription className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <a href="/register" className="text-emerald-600 hover:underline font-semibold">
+          <Link
+            href="/register"
+            className="text-emerald-600 hover:underline font-semibold"
+          >
             Sign up
-          </a>
+          </Link>
         </FieldDescription>
       </FieldGroup>
     </form>
