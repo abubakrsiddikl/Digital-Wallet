@@ -1,66 +1,159 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-
+import Link from "next/link";
 
 const Icons = {
   Logo: () => (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
       <rect width="32" height="32" rx="10" fill="#0F6E56" />
-      <path d="M8 10h16M16 10v12M10 22h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+      <path
+        d="M8 10h16M16 10v12M10 22h12"
+        stroke="#fff"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
     </svg>
   ),
   Moon: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
       <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
     </svg>
   ),
   Sun: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
     </svg>
   ),
   Send: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   ),
   Shield: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   ),
   Zap: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    >
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   ),
   Activity: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    >
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   ),
   ArrowRight: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
     </svg>
   ),
   Check: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   Menu: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   ),
   X: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Twitter: () => (
@@ -113,20 +206,25 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-wrap gap-3 pt-1">
-            <Button
-              size="lg"
-              className="rounded-xl px-6 bg-emerald-600 hover:bg-emerald-700 text-white border-0 h-12 text-base font-semibold"
-            >
-              Get Started Free
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-xl px-6 h-12 text-base gap-2"
-            >
-              <Icons.Send />
-              Send Money
-            </Button>
+            <Link href={"/register"}>
+              <Button
+                size="lg"
+                className="rounded-xl px-6 bg-emerald-600 hover:bg-emerald-700 text-white border-0 h-12 text-base font-semibold cursor-pointer"
+              >
+                Get Started Free
+              </Button>
+            </Link>
+            <Link href={"/register"}>
+              {" "}
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-xl px-6 h-12 text-base gap-2 cursor-pointer"
+              >
+                <Icons.Send />
+                Send Money
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-wrap items-center gap-5 pt-2">
@@ -138,7 +236,7 @@ export default function HeroSection() {
                   </span>
                   <span className="text-sm text-muted-foreground">{item}</span>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>
@@ -155,10 +253,30 @@ export default function HeroSection() {
 // wallet UI mockup component
 function WalletMockup() {
   const txns = [
-    { name: "Rahim Uddin", type: "Cash In", amount: "+৳2,500", color: "text-emerald-600" },
-    { name: "Nadia Islam", type: "Send Money", amount: "-৳800", color: "text-red-500" },
-    { name: "Agent – Gulshan", type: "Cash Out", amount: "-৳5,000", color: "text-red-500" },
-    { name: "Karim Ahmed", type: "Cash In", amount: "+৳1,200", color: "text-emerald-600" },
+    {
+      name: "Rahim Uddin",
+      type: "Cash In",
+      amount: "+৳2,500",
+      color: "text-emerald-600",
+    },
+    {
+      name: "Nadia Islam",
+      type: "Send Money",
+      amount: "-৳800",
+      color: "text-red-500",
+    },
+    {
+      name: "Agent – Gulshan",
+      type: "Cash Out",
+      amount: "-৳5,000",
+      color: "text-red-500",
+    },
+    {
+      name: "Karim Ahmed",
+      type: "Cash In",
+      amount: "+৳1,200",
+      color: "text-emerald-600",
+    },
   ];
 
   return (
@@ -170,14 +288,18 @@ function WalletMockup() {
         {/* Wallet header */}
         <div className="bg-emerald-600 p-5 pb-8">
           <div className="flex items-center justify-between mb-6">
-            <span className="text-emerald-100 text-sm font-medium">My Wallet</span>
+            <span className="text-emerald-100 text-sm font-medium">
+              My Wallet
+            </span>
             <div className="flex gap-1.5">
               <div className="w-2 h-2 rounded-full bg-emerald-300" />
               <div className="w-2 h-2 rounded-full bg-emerald-200" />
             </div>
           </div>
           <p className="text-emerald-100 text-xs mb-1">Total Balance</p>
-          <p className="text-white text-3xl font-bold tracking-tight">৳ 24,830.00</p>
+          <p className="text-white text-3xl font-bold tracking-tight">
+            ৳ 24,830.00
+          </p>
           <p className="text-emerald-200 text-xs mt-1">+৳2,500 this week</p>
         </div>
 
@@ -196,7 +318,9 @@ function WalletMockup() {
                 <span className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-base font-bold">
                   {action.icon}
                 </span>
-                <span className="text-xs font-medium text-foreground">{action.label}</span>
+                <span className="text-xs font-medium text-foreground">
+                  {action.label}
+                </span>
               </button>
             ))}
           </div>
@@ -215,11 +339,17 @@ function WalletMockup() {
                     {t.name[0]}
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-foreground leading-tight">{t.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{t.type}</p>
+                    <p className="text-xs font-medium text-foreground leading-tight">
+                      {t.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t.type}
+                    </p>
                   </div>
                 </div>
-                <span className={`text-sm font-semibold ${t.color}`}>{t.amount}</span>
+                <span className={`text-sm font-semibold ${t.color}`}>
+                  {t.amount}
+                </span>
               </div>
             ))}
           </div>
