@@ -25,7 +25,14 @@ jobs:
         run: node -v
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          cd Backend
+          pnpm install --frozen-lockfile
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          pnpm install --frozen-lockfile
 
       - name: Build Backend
         run: |
