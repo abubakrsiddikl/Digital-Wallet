@@ -24,10 +24,10 @@ jobs:
       - name: Check Node.js version
         run: node -v
 
-      - name: Install dependencies
-        run: |
-          cd Backend
-          pnpm install --frozen-lockfile
+      # - name: Install dependencies
+      #   run: |
+      #     cd Backend
+      #     pnpm install --frozen-lockfile
 
       # - name: Install dependencies
       #   run: |
