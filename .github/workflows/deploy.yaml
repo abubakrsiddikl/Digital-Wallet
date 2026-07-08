@@ -46,12 +46,14 @@ jobs:
 
   build-code:
     runs-on: ubuntu-latest
+    needs: test-code
     steps:
       - name: Building code
         run: echo "Building code..."
 
   deploy-code:
     runs-on: ubuntu-latest
+    needs: build-code
     steps:
       - name: Deploying code
         run: echo "Deploying code..."
