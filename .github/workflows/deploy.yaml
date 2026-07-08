@@ -29,17 +29,29 @@ jobs:
           cd Backend
           pnpm install --frozen-lockfile
 
-      - name: Install dependencies
-        run: |
-          cd frontend
-          pnpm install --frozen-lockfile
+      # - name: Install dependencies
+      #   run: |
+      #     cd frontend
+      #     pnpm install --frozen-lockfile
 
-      - name: Build Backend
-        run: |
-          cd Backend
-          pnpm build
+      # - name: Build Backend
+      #   run: |
+      #     cd Backend
+      #     pnpm build
 
-      - name: Build frontend
-        run: |
-          cd frontend
-          pnpm build
+      # - name: Build frontend
+      #   run: |
+      #     cd frontend
+      #     pnpm build
+
+  build-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Building code
+        run: echo "Building code..."
+
+  deploy-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploying code
+        run: echo "Deploying code..."
