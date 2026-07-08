@@ -18,6 +18,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6.0.9
+        with:
+          version: "10.31.0"
 
       - name: Check Node.js version
         run: node -v
