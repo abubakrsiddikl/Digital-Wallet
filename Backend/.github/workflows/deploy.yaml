@@ -1,0 +1,15 @@
+name: Ready to code and deploy
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: print working directory
+        run: |
+          pwd
+          ls -a
+          echo $GITHUB_WORKSPACE
